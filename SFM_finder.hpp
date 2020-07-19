@@ -41,14 +41,26 @@ and on any theory of liability, whether in contract, strict liability,
 or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
-#ifndef _OPENCV_MATCHING_POINTS_H_
-#define _OPENCV_MATCHING_POINTS_H_
+#ifndef _OPENCV_SFM_FINDER_H_
+#define _OPENCV_SFM_FINDER_H_
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
 using namespace cv;
 using namespace std;
 
+namespace cv
+{
+    Mat findSeparableFundamentalMat(InputArray pts1, InputArray pts2, int im_size_h_org, int im_size_w_org,
+        float inlier_ratio = 0.4, int inlier_threshold = 3,
+        int hough_rescale = -1, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
+        int theta_res = 180, float max_distance_pts_line = 3, int top_line_retries = 2, int min_shared_points = 4);
+}
+
+#endif // !_OPENCV_SFM_FINDER_H_
+
+
+/*
 void matchPoints(const Mat& img1c, const Mat& img2c, vector<int> &pts1, vector<int> &pts2);
 
 class SeparableFundamentalMatrixResult
@@ -62,6 +74,4 @@ public:
     int rescale;
 };
 
-
-
-#endif // !_OPENCV_MATCHING_POINTS_H_
+*/

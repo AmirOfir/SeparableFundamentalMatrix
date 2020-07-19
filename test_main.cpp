@@ -1,6 +1,8 @@
 #include <opencv2\opencv.hpp>
 #include <iostream>
 #include <cstdlib>
+#include <fstream>
+#include <type_traits>
 
 using namespace cv;
 using namespace std;
@@ -40,7 +42,41 @@ string shape(const cv::Mat &mat)
     stream << "(" << mat.size().height << "," << mat.size().width << "," << (mat.dims + 1) << ")";
     return stream.str();
 }
-tuple<cv::Mat, cv::Mat> LoadImages(string img1_name, string img2_name, float scale_factor)
+
+vector<vector<float>> parseCSV(string csv_name)
+{
+    ifstream data(csv_name);
+    string line;
+    std::string::size_type sz;
+    vector<vector<float>> parsedCsv;
+    while(std::getline(data,line))
+    {
+        stringstream lineStream(line);
+        string cell;
+        vector<float> parsedRow;
+        while(std::getline(lineStream,cell,','))
+        {
+            parsedRow.push_back(stof(cell, &sz));
+        }
+
+        parsedCsv.push_back(parsedRow);
+    }
+
+    return parsedCsv;
+};
+
+template <typename RealType>
+Mat convertVectorOfVectorsToMat(const vector<vector<RealType>> &vec, int chs = 1)
+{
+    Mat mat(vec.size(), vec.at(0).size(), CV_MAKETYPE(cv::DataType<RealType>::type, chs));
+    for(int i=0; i<mat.rows; ++i)
+         for(int j=0; j<mat.cols; ++j)
+              mat.at<RealType>(i, j) = vec.at(i).at(j);
+    return mat;
+}
+
+void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string imgB_pts_name, float scale_factor, 
+    Mat &img1, Mat &img2, vector<vector<float>> &ptsA, vector<vector<float>> &ptsB)
 {
     auto img1c = imread(img1_name); // queryImage
     auto img2c = imread(img2_name); // trainImage
@@ -60,21 +96,69 @@ tuple<cv::Mat, cv::Mat> LoadImages(string img1_name, string img2_name, float sca
     cv::cvtColor(img1c, img1c, cv::COLOR_BGR2GRAY);
     cv::cvtColor(img2c, img2c, cv::COLOR_BGR2GRAY);
 
-    return { img1c, img2c };
+    ptsA = parseCSV(imgA_pts_name);
+    ptsB = parseCSV(imgB_pts_name);
+    img1 = img1c;
+    img2 = img2c;
 }
-
-
 
 int main()
 {
+    vector<tuple<string, string, string, string, float>> example_files = 
+    {
+        {
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1a.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1b.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts1a.csv)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts1b.csv)",
+            0.5
+        },
+        {
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im2a.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im2b.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts2a.csv)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts2b.csv)", 1
+        },
+        {
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im3a.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im3b.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts3a.csv)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts3b.csv)", 1
+        },
+        {
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im4a.png)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im4b.png)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts4a.csv)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts4b.csv)", 0.3
+        },
+        {
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im5a.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im5b.jpg)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts5a.csv)",
+            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts5b.csv)", 0.75
+        }
+    };
+    for (auto file_tuple : example_files)
+    {
+        Mat imgA, imgB;
+        vector<vector<float>> ptsA, ptsB;
 
-    //ShowImage
+        LoadImages(get<0>(file_tuple), get<1>(file_tuple), get<2>(file_tuple), get<3>(file_tuple), get<4>(file_tuple), imgA, imgB, ptsA, ptsB);
+
+        Mat ptsA_Mat = convertVectorOfVectorsToMat(ptsA);
+        Mat ptsB_Mat = convertVectorOfVectorsToMat(ptsB);
+        Mat mask;
+        Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat);
+
+        ShowImage(imgA);
+    }
+    /*
 
     cv::String img1_name = R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1a.jpg)";
     cv::String img2_name = R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1b.jpg)";
     auto t = LoadImages(img1_name, img2_name, 0.5);
     ShowImage(get<0>(t));
-    ShowImage(get<1>(t));
+    ShowImage(get<1>(t));*/
     
     return 0;
 }
