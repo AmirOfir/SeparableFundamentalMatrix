@@ -49,19 +49,19 @@ the use of this software, even if advised of the possibility of such damage.
 using namespace cv;
 using namespace std;
 
-void matchPoints(const Mat& img1c, const Mat& img2c, vector<int> &pts1, vector<int> &pts2);
-
-class SeparableFundamentalMatrixResult
+struct line_info
 {
-public:
-    Mat &RANSAC;
-    Mat &LMEDS;
-    vector<void*> top_lines;
-    vector<void*> lines_img1;
-    vector<void*> lines_img2;
-    int rescale;
+    vector<int> matching_indexes;
+    Point3f line_eq_abc;
+    Point3f line_eq_abc_norm;
+    Point2f bottom_left_edge_point;
+    Point2f top_right_edge_point;
+    float max_distance;
+    int line_index;
 };
 
-
+void FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
+    const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
+    int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio);
 
 #endif // !_OPENCV_MATCHING_POINTS_H_

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <type_traits>
+#include "SFM_finder.hpp"
 
 using namespace cv;
 using namespace std;
@@ -148,7 +149,8 @@ int main()
         Mat ptsA_Mat = convertVectorOfVectorsToMat(ptsA);
         Mat ptsB_Mat = convertVectorOfVectorsToMat(ptsB);
         Mat mask;
-        Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat);
+        //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat);
+        cv::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
 
         ShowImage(imgA);
     }
