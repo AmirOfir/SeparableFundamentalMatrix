@@ -46,6 +46,8 @@ the use of this software, even if advised of the possibility of such damage.
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
+#include "np_cv_imp.hpp"
+
 using namespace cv;
 using namespace std;
 

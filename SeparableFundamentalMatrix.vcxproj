@@ -80,11 +80,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="matching_lines.cpp" />
+    <ClCompile Include="np_cv_imp.cpp" />
     <ClCompile Include="SFM_finder.cpp" />
     <ClCompile Include="test_main.cpp" />
+    <ClCompile Include="test_np_cv_imp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="matching_lines.hpp" />
+    <ClInclude Include="np_cv_imp.hpp" />
     <ClInclude Include="SFM_finder.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
