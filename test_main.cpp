@@ -6,6 +6,7 @@
 #include "SFM_finder.hpp"
 
 using namespace cv;
+using namespace cv::separableFundamentalMatrix;
 using namespace std;
 
 int testOpenCVVideo()
@@ -155,7 +156,7 @@ int main()
         Mat ptsB_Mat = convertVectorOfVectorsToMat(ptsB);
         Mat mask;
         //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat);
-        cv::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
+        cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
 
         ShowImage(imgA);
     }

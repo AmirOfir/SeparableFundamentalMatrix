@@ -1,5 +1,8 @@
-    
+
 #include "np_cv_imp.hpp"
+using namespace cv;
+using namespace std;
+using namespace cv::separableFundamentalMatrix;
 
 vector<int> MatToVec(Mat mat)
 {
@@ -26,6 +29,5 @@ void test_reduceSum3d()
     h.at<uchar>(0, 0, 2) = 2;
     h.at<uchar>(0, 0, 3) = 2;
     h.at<uchar>(0, 0, 4) = 2;
-
-
 }
+
