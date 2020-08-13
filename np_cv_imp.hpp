@@ -99,7 +99,7 @@ namespace cv { namespace separableFundamentalMatrix
     }
 
     template<typename _Tp>
-    vector<Point3_<_Tp>> Indices(InputArray _mat)
+    vector<Point3_<_Tp>> indices(InputArray _mat)
     {
         CV_Assert(_mat.dims() == 2);
         Mat mat = _mat.getMat();
@@ -130,24 +130,35 @@ namespace cv { namespace separableFundamentalMatrix
         return ret;
     }
 
-    vector<int> IndexWhereLowerThan(const vector<float> &vec, float maxValue);
-
-    template<typename _Tp>
-    vector<_Tp> intersect1d(const vector<_Tp> &a, const vector<_Tp> &b)
+    template <class InputIterator, class UnaryPredicate>
+    vector<int64> index_if(InputIterator first, InputIterator last, UnaryPredicate pred)
     {
-        vector<_Tp> ret;
+        vector<int64> ret;
 
+        int64 i = 0;
+        while (first!=last) {
+            if (pred(*first)) {
+                ret.push_back(i);
+            }
+            ++i;
+            ++first;
+        }
+        return ret;
+    }
+
+    template <class _InIt1, class _InIt2, class _OutIt> inline
+    void intersect1d(_InIt1 _First1,  _InIt1 _Last1, _InIt2 _First2, _InIt2 _Last2, _OutIt _Dest)
+    {
         // Copy
-        vector<_Tp> acopy = a, bcopy = b;
+        vector<typename iterator_traits<_InIt1>::value_type> acopy(_First1, _Last1);
+        vector<typename iterator_traits<_InIt2>::value_type> bcopy(_First2, _Last2);
 
         // Sort
-        sort(acopy.begin(), acopy.end());
-        sort(bcopy.begin(), bcopy.end());
+        std::sort(acopy.begin(), acopy.end());
+        std::sort(bcopy.begin(), bcopy.end());
 
-        // intersect
-        set_intersection(acopy.begin(), acopy.end(), bcopy.begin(), bcopy.end(), back_inserter(ret));
-
-        return ret;
+        // Intersect
+        set_intersection(acopy.begin(), acopy.end(), bcopy.begin(), bcopy.end(), back_inserter(_Dest));
     }
 
     // Helper - Converts an input array to vector
@@ -173,16 +184,6 @@ namespace cv { namespace separableFundamentalMatrix
         }
         return *input;
     }
-
-    //template <typename _Tp, typename _Ix>
-    //vector<_Tp> ByIndices(const vector<_Tp> &vec, const vector<_Ix> &indices)
-    //{
-    //    vector<_Tp> ret;
-    //    for (size_t i = 0; i < indices.size(); ++i )
-    //        ret.push_back(vec[indices[i]]);
-    //    return ret;
-    //}
-
 
     template <typename _Tp>
     vector<Point_<_Tp>> ByIndices(InputArray _input, const vector<int> &indices)

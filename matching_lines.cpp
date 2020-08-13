@@ -86,7 +86,7 @@ namespace cv {
 
             // Use voting to find out which lines shares points
             // Convert to a list where each entry is 1x3: the number of shared points for each pair of line and their indices
-            auto num_shared_points_vote = Indices<int>(hough_pts);
+            auto num_shared_points_vote = indices<int>(hough_pts);
 
             //  Delete all non-relevent entries: That have minSharedPoints for each side (multiply by two - one for left line and one for right line).
             num_shared_points_vote.erase(
@@ -117,7 +117,10 @@ namespace cv {
                 vector<Point2f> matchingPoints2;
 
                 {
-                    vector<int> arr_idx = intersect1d(lineInfosImg1[k].matching_indexes, lineInfosImg2[j].matching_indexes);
+                    vector<int> arr_idx;
+                    intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
+                        lineInfosImg2[j].matching_indexes.begin(),lineInfosImg2[j].matching_indexes.end(), arr_idx);
+
                     auto filteredPts = ByIndices<float>(_ptsImg1, arr_idx);
                     matchingPoints1 = projectPointsOnLine(lineInfosImg1[k].bottom_left_edge_point, lineInfosImg1[k].top_right_edge_point, filteredPts);
 
@@ -195,11 +198,11 @@ namespace cv {
                 line_eq.z = 0;
             }
 
-            vector<int> matching_indexes;
+            vector<int64> matching_indexes;
             {
                 float scale = sqrtf((line_eq.x * line_eq.x) + (line_eq.y * line_eq.y));
                 vector<float> d = MatrixVectorMul(pts, line_eq, 1.f / scale, true);
-                matching_indexes = IndexWhereLowerThan(d, max_distance);
+                matching_indexes = index_if(d.begin(), d.end(), [&](float f) {return f < max_distance; });
             }
 
             auto lineEqNormDivider = sqrt(pow(line_eq.x, 2) + pow(line_eq.y, 2)) + FLT_EPSILON;

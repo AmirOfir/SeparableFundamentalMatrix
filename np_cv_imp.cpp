@@ -18,17 +18,5 @@ namespace cv {
 
         }
 
-        vector<int> IndexWhereLowerThan(const vector<float> &vec, float maxValue)
-        {
-            vector<int> ret;
-            for (auto i = 0; i < vec.size(); i++)
-            {
-                if (vec[i] < maxValue)
-                    ret.push_back(i);
-            }
-
-            return ret;
-        }
-
     }
 }
