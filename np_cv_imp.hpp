@@ -201,7 +201,7 @@ namespace cv { namespace separableFundamentalMatrix
     vector<Point_<_Tp>> byIndices(InputArray _input, const vector<int> &indices)
     {
         CV_Assert(_input.dims() == 2);
-        Mat mat = _input.getMat();
+        Mat mat = _input.isMat() ? _input.getMat() : _input.getMat().t();
         
         vector<Point_<_Tp>> ret;
         for (auto index : indices)
@@ -253,6 +253,15 @@ namespace cv { namespace separableFundamentalMatrix
         
         return ret;
     }
+
+    Mat randomIntMat(int rows, int cols, int min, int max)
+    {
+        Mat ret(rows, cols, CV_32S);
+        cv::randu(ret, Scalar(min), Scalar(max));
+
+        return ret;
+    }
+
 }}
 
 
