@@ -24,8 +24,7 @@ namespace cv {
             return ret;
         }
 
-        Mat createHeatmap(InputArray ptsImg1, InputArray ptsImg2, const vector<line_info> &lineInfosImg1,
-            const vector<line_info> &lineInfosImg2)
+        Mat createHeatmap(InputArray ptsImg1, InputArray ptsImg2, const vector<line_info> &lineInfosImg1, const vector<line_info> &lineInfosImg2)
         {
             /*
             pts_lines         = np.zeros((len(pts1), len(lines_info_img1), len(lines_info_img2)))
@@ -66,6 +65,24 @@ namespace cv {
             }
 
             return heatmap;
+        }
+
+        vector<Point2f> projectPointsOnLineByInices(InputArray _pts, const line_info &lineInfo, vector<int> indices)
+        {
+            vector<Point2f> filteredPts;
+            filteredPts = byIndices<float>(_pts, indices);
+            return projectPointsOnLine(lineInfo.bottom_left_edge_point, lineInfo.top_right_edge_point, filteredPts);
+        }
+
+        vector<int> uniqueIntersectedPoints(const vector<Point2f> &matchingPoints1, const vector<Point2f> &matchingPoints2)
+        {
+            vector<int> uniqueIdx1 = index_unique(vector<Point>(matchingPoints1.begin(), matchingPoints1.end()));
+            vector<int> uniqueIdx2 = index_unique(vector<Point>(matchingPoints2.begin(), matchingPoints2.end()));
+
+            vector<int> unique_idx;
+            intersect1d(uniqueIdx1.begin(), uniqueIdx1.end(), uniqueIdx2.begin(), uniqueIdx2.end(), back_inserter(unique_idx));
+
+            return unique_idx;
         }
 
         void getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
@@ -117,29 +134,24 @@ namespace cv {
                 int k = num_shared_points_vote[n].y;
                 int j = num_shared_points_vote[n].z;
 
-                vector<Point2f> matchingPoints1;
-                vector<Point2f> matchingPoints2;
+                vector<int> arr_idx;
+                intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
+                    lineInfosImg2[j].matching_indexes.begin(), lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
 
-                {
-                    vector<int> arr_idx;
-                    intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
-                        lineInfosImg2[j].matching_indexes.begin(),lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
+                vector<Point2f> matchingPoints1 = projectPointsOnLineByInices(_ptsImg1, lineInfosImg1[k], arr_idx);
+                vector<Point2f> matchingPoints2 = projectPointsOnLineByInices(_ptsImg2, lineInfosImg2[j], arr_idx);
 
-                    vector<Point2f> filteredPts;
-                    filteredPts = byIndices<float>(_ptsImg1, arr_idx);
-                    matchingPoints1 = projectPointsOnLine(lineInfosImg1[k].bottom_left_edge_point, lineInfosImg1[k].top_right_edge_point, filteredPts);
+                vector<int> uniqueIdx = uniqueIntersectedPoints(matchingPoints1, matchingPoints2);
 
-                    filteredPts = byIndices<float>(_ptsImg2, arr_idx);
-                    matchingPoints2 = projectPointsOnLine(lineInfosImg2[j].bottom_left_edge_point, lineInfosImg2[j].top_right_edge_point, filteredPts);
-                }
-
-                vector<int> uniqueIdx1 = index_unique(vector<Point>(matchingPoints1.begin(), matchingPoints1.end()));
-                
                 // We need at least four unique points
-                vector<Point> matchingPoints1Int(matchingPoints1.begin(), matchingPoints1.end());
-                vector<Point> matchingPoints2Int(matchingPoints2.begin(), matchingPoints2.end());
-                //lines_info_img1
+                if (uniqueIdx.size() < 4)
+                    continue;
 
+                // Filter
+                matchingPoints1 = byIndices<float>(matchingPoints1, uniqueIdx);
+                matchingPoints2 = byIndices<float>(matchingPoints2, uniqueIdx);
+
+                // Find inliers, inlier_idx_homography - index of inliers of all the line points
             }
 
         }
