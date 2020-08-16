@@ -13,6 +13,18 @@ namespace cv { namespace separableFundamentalMatrix
 {
     using namespace cv;
     using namespace std;
+    
+    template <typename _Tp>
+    bool comparePoints(Point_<_Tp> a, Point_<_Tp> b)
+    {
+        return a.x < b.x || (a.x == b.x && a.y < b.y);
+    }
+    
+    template <typename _Tp>
+    bool lexicographicalCompare(const Point3_<_Tp> &p1, const Point3_<_Tp> &p2)
+    {
+        return std::tie(p1.x, p1.y, p1.z) < std::tie(p2.x, p2.y, p2.z);
+    }
 
     template <typename TSource, typename TDest>
     void reduce3d(InputArray _src, OutputArray _dst, int dim, int rtype, int dtype)
@@ -136,10 +148,11 @@ namespace cv { namespace separableFundamentalMatrix
         vector<int64> ret;
 
         int64 i = 0;
-        while (first!=last) {
-            if (pred(*first)) {
+        while (first != last) 
+        {
+            if (pred(*first)) 
                 ret.push_back(i);
-            }
+            
             ++i;
             ++first;
         }
@@ -158,10 +171,9 @@ namespace cv { namespace separableFundamentalMatrix
         std::sort(bcopy.begin(), bcopy.end());
 
         // Intersect
-        set_intersection(acopy.begin(), acopy.end(), bcopy.begin(), bcopy.end(), back_inserter(_Dest));
+        set_intersection(acopy.begin(), acopy.end(), bcopy.begin(), bcopy.end(), _Dest);
     }
 
-    // Helper - Converts an input array to vector
     template<class T>
     std::vector<T>& getVec(InputArray _input) {
         std::vector<T> *input;
@@ -222,6 +234,40 @@ namespace cv { namespace separableFundamentalMatrix
         }
 
         return projections;
+    }
+
+    template <typename _Tp>
+    vector<int> index_unique(const vector<Point_<_Tp>> &_points)
+    {
+        typedef tuple<Point_<_Tp>, size_t> point_index;
+        auto compare_point_index = [](point_index a, point_index b)->bool { return comparePoints(std::get<0>(a), std::get<0>(b)); };
+            //[](point_index a, point_index b)->bool { return comparePoints(std::get(0, a), std::get(0, b)); });
+
+        vector<int> ret;
+        if (!_points.size()) return ret;
+
+        // Add the index field
+        vector<point_index> vec;
+        for (size_t i = 0; i < _points.size(); ++i)
+            vec.push_back(point_index(_points[i], i));
+        
+        // 3 phases - unique -> sort -> unique
+        
+        // Unique (removes consecutive duplicates)
+        auto it = std::unique(vec.begin(), vec.end(), compare_point_index);
+        vec.resize( std::distance(vec.begin(),it) ); 
+
+        // Sort
+        std::sort(vec.begin(), vec.end(), compare_point_index);
+
+        // Unique again
+        it = std::unique(vec.begin(), vec.end(), compare_point_index);
+        vec.resize( std::distance(vec.begin(),it) ); 
+
+        for (auto p : vec)
+            ret.push_back(get<1>(p));
+        
+        return ret;
     }
 }}
 

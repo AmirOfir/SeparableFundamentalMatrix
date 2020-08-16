@@ -95,8 +95,14 @@ namespace cv {
                     }), num_shared_points_vote.end()
                         );
 
-            // Sort the entries (in reverse order
-            std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), [](Point3i &a, Point3i &b) { return a.x > b.x; });
+            // Sort the entries (in reverse order)
+            // Note: could've sorted them by x only, but the python code sorted like that
+            //std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), lexicographicalCompare<int>);
+            std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), 
+                [](Point3i &a, Point3i &b)
+                {
+                    return a.x > b.x || (a.x == b.x && a.y < b.y) || (a.x ==b.x && a.y==b.y && a.z < b.z);
+                });
 
             // For each matching points on the matching lines,
             // project the shared points to be exactly on the line
@@ -119,7 +125,7 @@ namespace cv {
                 {
                     vector<int> arr_idx;
                     intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
-                        lineInfosImg2[j].matching_indexes.begin(),lineInfosImg2[j].matching_indexes.end(), arr_idx);
+                        lineInfosImg2[j].matching_indexes.begin(),lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
 
                     auto filteredPts = ByIndices<float>(_ptsImg1, arr_idx);
                     matchingPoints1 = projectPointsOnLine(lineInfosImg1[k].bottom_left_edge_point, lineInfosImg1[k].top_right_edge_point, filteredPts);
@@ -128,6 +134,8 @@ namespace cv {
                     matchingPoints2 = projectPointsOnLine(lineInfosImg2[j].bottom_left_edge_point, lineInfosImg2[j].top_right_edge_point, filteredPts);
                 }
 
+                vector<int> uniqueIdx1 = index_unique(vector<Point>(matchingPoints1.begin(), matchingPoints1.end()));
+                
                 // We need at least four unique points
                 vector<Point> matchingPoints1Int(matchingPoints1.begin(), matchingPoints1.end());
                 vector<Point> matchingPoints2Int(matchingPoints2.begin(), matchingPoints2.end());

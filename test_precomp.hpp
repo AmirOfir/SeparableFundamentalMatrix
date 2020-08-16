@@ -9,7 +9,9 @@
 
 
 namespace opencv_test {
-using namespace cv::intensity_transform;
+//using namespace cv::intensity_transform;
+    
 }
+void test_intersect1d();
 
 #endif

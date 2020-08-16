@@ -4,6 +4,7 @@
 #include <fstream>
 #include <type_traits>
 #include "SFM_finder.hpp"
+#include "test_precomp.hpp"
 
 using namespace cv;
 using namespace cv::separableFundamentalMatrix;
@@ -104,13 +105,9 @@ void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string
     img2 = img2c;
 }
 
-
-
-
-
-
 int main()
 {
+    test_intersect1d();
     vector<tuple<string, string, string, string, float>> example_files = 
     {
         {
@@ -170,3 +167,4 @@ int main()
     
     return 0;
 }
+
