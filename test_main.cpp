@@ -78,6 +78,15 @@ Mat convertVectorOfVectorsToMat(const vector<vector<RealType>> &vec, int chs = 1
     return mat;
 }
 
+template <typename RealType>
+vector<Point2f> convertToVectorOfPoints(const vector<vector<RealType>> &vec, int chs = 1)
+{
+    vector<Point2f> ret;
+    for (auto c : vec)
+        ret.push_back(Point2f(c.at(0), c.at(1)));
+    return ret;
+}
+ 
 void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string imgB_pts_name, float scale_factor, 
     Mat &img1, Mat &img2, vector<vector<float>> &ptsA, vector<vector<float>> &ptsB)
 {
@@ -107,7 +116,7 @@ void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string
 
 int main()
 {
-    test_intersect1d();
+    
     vector<tuple<string, string, string, string, float>> example_files = 
     {
         {
@@ -151,6 +160,9 @@ int main()
 
         Mat ptsA_Mat = convertVectorOfVectorsToMat(ptsA);
         Mat ptsB_Mat = convertVectorOfVectorsToMat(ptsB);
+        //cout << ptsA_Mat.at<float>(35, 0) << "," << ptsA_Mat.at<float>(35, 1);
+        auto ptsAVec = convertToVectorOfPoints(ptsA);
+        auto ptsBVec = convertToVectorOfPoints(ptsB);
         Mat mask;
         //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat);
         cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);

@@ -12,18 +12,24 @@ class TestGen
     /*default_random_engine random_engine_;
     normal_distribution<int> distribution_;*/
 public:
-    void genIntersection(vector<int> &a, vector<int> &b, vector<int> &intersection)
+    vector<int> genNumbers()
     {
         srand(time(0));
 
         set<int> numbers;
         while (numbers.size() < 15)
         {
-            int n = rand() % 50;
+            int n = rand() % 100;
             numbers.insert(n);
         }
         vector<int> shuffled(numbers.begin(), numbers.end());
         std::random_shuffle(shuffled.begin(), shuffled.end());
+        return shuffled;
+    }
+
+    void genIntersection(vector<int> &a, vector<int> &b, vector<int> &intersection)
+    {
+        auto shuffled = genNumbers();
 
         for (size_t i = 0; i < 5; i++)
         {
@@ -43,6 +49,18 @@ public:
         std::random_shuffle(a.begin(), a.end());
         std::random_shuffle(b.begin(), b.end());
         std::sort(intersection.begin(), intersection.end());
+    }
+    Mat genMat()
+    {
+        srand(time(0));
+        Mat ret(100 ,2, CV_32F);
+
+        for (size_t i = 0; i < 100; i++)
+        {
+            ret.at<float>(i, 0) = rand();
+            ret.at<float>(i, 1) = rand();
+        }
+        return ret;
     }
 };
 
@@ -86,6 +104,14 @@ void test_intersect1d()
     }
 }
 
+void test_byIndices()
+{
+    TestGen testGen;
+    Mat m = testGen.genMat();
+    vector<int> indices = testGen.genNumbers();
+    vector<Point2f> result =
+    byIndices<float>(m, indices);
+}
 int __stdcall testMain()
 {
     return 0;

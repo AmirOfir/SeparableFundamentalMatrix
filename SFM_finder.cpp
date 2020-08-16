@@ -9,7 +9,7 @@ Mat cv::separableFundamentalMatrix::findSeparableFundamentalMat(InputArray pts1,
         float hough_rescale, int num_matching_pts_to_use, int pixel_res, int min_hough_points,
         int theta_res, float max_distance_pts_line, int top_line_retries, int min_shared_points)
 {
-    int pts1Count = pts1.getMat().size().height;
+    int pts1Count = pts1.isVector() ? pts1.getMat().size().width : pts1.getMat().size().height;
     if (hough_rescale == DEFAULT_HOUGH_RESCALE)
         hough_rescale = float(2 * pts1Count) / im_size_h_org;
     else if (hough_rescale > 1) // Only subsample

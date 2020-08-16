@@ -15,13 +15,13 @@ namespace cv { namespace separableFundamentalMatrix
     using namespace std;
     
     template <typename _Tp>
-    bool comparePoints(Point_<_Tp> a, Point_<_Tp> b)
+    bool lexicographicalSort2d(Point_<_Tp> a, Point_<_Tp> b)
     {
-        return a.x < b.x || (a.x == b.x && a.y < b.y);
+        return std::tie(a.x, a.y) < std::tie(b.x, b.y);// < b.x || (a.x == b.x && a.y < b.y);
     }
     
     template <typename _Tp>
-    bool lexicographicalCompare(const Point3_<_Tp> &p1, const Point3_<_Tp> &p2)
+    bool lexicographicalSort3d(const Point3_<_Tp> &p1, const Point3_<_Tp> &p2)
     {
         return std::tie(p1.x, p1.y, p1.z) < std::tie(p2.x, p2.y, p2.z);
     }
@@ -198,23 +198,14 @@ namespace cv { namespace separableFundamentalMatrix
     }
 
     template <typename _Tp>
-    vector<Point_<_Tp>> ByIndices(InputArray _input, const vector<int> &indices)
+    vector<Point_<_Tp>> byIndices(InputArray _input, const vector<int> &indices)
     {
         CV_Assert(_input.dims() == 2);
-        Point_<_Tp>* data = reinterpret_cast<Point_<_Tp>*>(_input.getMat().data);
-
         Mat mat = _input.getMat();
-        cout << mat.at<float>(0, 0) << "," << mat.at<float>(0, 1);
-
-        //// To vector
-        //Point2f *data = (Point2f *)mat.data;
-        //int length = mat.total();
-        //std::vector<Point2f> vec;
-        //vec.assign(data, data + length);
-
+        
         vector<Point_<_Tp>> ret;
         for (auto index : indices)
-            ret.push_back(data[index]);
+            ret.push_back(Point_<_Tp>(mat.at<float>(index, 0), mat.at<float>(index, 1)));
         return ret;
     }
 
@@ -240,8 +231,8 @@ namespace cv { namespace separableFundamentalMatrix
     vector<int> index_unique(const vector<Point_<_Tp>> &_points)
     {
         typedef tuple<Point_<_Tp>, size_t> point_index;
-        auto compare_point_index = [](point_index a, point_index b)->bool { return comparePoints(std::get<0>(a), std::get<0>(b)); };
-            //[](point_index a, point_index b)->bool { return comparePoints(std::get(0, a), std::get(0, b)); });
+        auto sort_point_index = [](point_index a, point_index b)->bool { return lexicographicalSort2d(std::get<0>(a), std::get<0>(b)); };
+        auto compare_point_index = [](point_index a, point_index b)->bool {return std::get<0>(a) == std::get<0>(b); };
 
         vector<int> ret;
         if (!_points.size()) return ret;
@@ -251,19 +242,12 @@ namespace cv { namespace separableFundamentalMatrix
         for (size_t i = 0; i < _points.size(); ++i)
             vec.push_back(point_index(_points[i], i));
         
-        // 3 phases - unique -> sort -> unique
-        
-        // Unique (removes consecutive duplicates)
-        auto it = std::unique(vec.begin(), vec.end(), compare_point_index);
-        vec.resize( std::distance(vec.begin(),it) ); 
-
         // Sort
-        std::sort(vec.begin(), vec.end(), compare_point_index);
+        std::sort(vec.begin(), vec.end(), sort_point_index);
 
-        // Unique again
-        it = std::unique(vec.begin(), vec.end(), compare_point_index);
-        vec.resize( std::distance(vec.begin(),it) ); 
-
+        // Unique
+        vec.erase( std::unique(vec.begin(), vec.end(), compare_point_index), vec.end() ); 
+        
         for (auto p : vec)
             ret.push_back(get<1>(p));
         

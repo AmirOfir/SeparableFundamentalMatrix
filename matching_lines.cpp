@@ -9,16 +9,14 @@ namespace cv {
 
 
         // Helper - Multiply matrix with vector
-        vector<float> MatrixVectorMul(InputArray mat2d, Point3f vec, float scale = 1, bool absolute = false)
+        vector<float> MatrixVectorMul(Mat mat2d, Point3f vec, float scale = 1, bool absolute = false)
         {
-            Mat mat = mat2d.getMat();
-
             vector<float> ret;
-            ret.reserve(mat.size().height);
+            ret.reserve(mat2d.size().height);
 
-            for (size_t i = 0; i < mat.size().height; i++)
+            for (size_t i = 0; i < mat2d.size().height; i++)
             {
-                float curr = (vec.x * mat.at<float>(i, 0)) + (vec.y * mat.at<float>(i, 1)) + vec.z;
+                float curr = (vec.x * mat2d.at<float>(i, 0)) + (vec.y * mat2d.at<float>(i, 1)) + vec.z;
                 if (absolute)
                     curr = abs(curr);
                 ret.push_back(curr * scale);
@@ -97,7 +95,7 @@ namespace cv {
 
             // Sort the entries (in reverse order)
             // Note: could've sorted them by x only, but the python code sorted like that
-            //std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), lexicographicalCompare<int>);
+            //std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), lexicographicalSort3d<int>);
             std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), 
                 [](Point3i &a, Point3i &b)
                 {
@@ -127,10 +125,11 @@ namespace cv {
                     intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
                         lineInfosImg2[j].matching_indexes.begin(),lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
 
-                    auto filteredPts = ByIndices<float>(_ptsImg1, arr_idx);
+                    vector<Point2f> filteredPts;
+                    filteredPts = byIndices<float>(_ptsImg1, arr_idx);
                     matchingPoints1 = projectPointsOnLine(lineInfosImg1[k].bottom_left_edge_point, lineInfosImg1[k].top_right_edge_point, filteredPts);
 
-                    filteredPts = ByIndices<float>(_ptsImg2, arr_idx);
+                    filteredPts = byIndices<float>(_ptsImg2, arr_idx);
                     matchingPoints2 = projectPointsOnLine(lineInfosImg2[j].bottom_left_edge_point, lineInfosImg2[j].top_right_edge_point, filteredPts);
                 }
 
@@ -179,7 +178,7 @@ namespace cv {
             return ret;
         }
 
-        line_info createLineInfo(InputArray pts, const vector<float> &points_intersection, float max_distance, int line_index)
+        line_info createLineInfo(Mat pts, const vector<float> &points_intersection, float max_distance, int line_index)
         {
             CV_Assert(points_intersection.size() == 4);
 
@@ -226,10 +225,10 @@ namespace cv {
             return ret;
         }
 
-        vector<line_info> getHoughLines(InputArray pts, const int im_size_w, const int im_size_h, int min_hough_points,
+        vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
             int pixel_res, int theta_res, float max_distance, int num_matching_pts_to_use)
         {
-            Mat ptsRounded = pts.getMat();
+            Mat ptsRounded = pts.clone();
             ptsRounded.convertTo(ptsRounded, CV_32S);
 
             Mat bw_img = Mat::zeros(im_size_h, im_size_w, CV_8U);
@@ -266,8 +265,8 @@ namespace cv {
             hough_rescale = hough_rescale * 2; // for the first time
             max_distance_pts_line = max_distance_pts_line * 0.5;
 
-            Mat pts1Mat = pts1.getMat();
-            Mat pts2Mat = pts2.getMat();
+            Mat pts1Org = pts1.isMat() ? pts1.getMat() : pts1.getMat().t();
+            Mat pts2Org = pts2.isMat() ? pts2.getMat() : pts2.getMat().t();
 
             // we sample a small subset of features to use in the hough transform, if our sample is too sparse, increase it
             for (auto i = 0; i < top_line_retries; i++)
@@ -275,13 +274,13 @@ namespace cv {
                 // rescale points and image size for fast line detection
                 hough_rescale = hough_rescale * 0.5;
                 max_distance_pts_line = max_distance_pts_line * 2;
-                auto pts1Temp = hough_rescale * pts1Mat;
-                auto pts2Temp = hough_rescale * pts2Mat;
+                auto pts1 = hough_rescale * pts1Org;
+                auto pts2 = hough_rescale * pts2Org;
                 auto im_size_h = int(round(im_size_h_org * hough_rescale)) + 3;
                 auto im_size_w = int(round(im_size_w_org * hough_rescale)) + 3;
 
-                auto linesImg1 = getHoughLines(pts1Temp, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
-                auto linesImg2 = getHoughLines(pts2Temp, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
+                auto linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
+                auto linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
 
                 if (linesImg1.size() && linesImg2.size())
                 {
