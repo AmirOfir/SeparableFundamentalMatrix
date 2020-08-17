@@ -228,7 +228,7 @@ namespace cv { namespace separableFundamentalMatrix
     }
 
     template <typename _Tp>
-    vector<int> index_unique(const vector<Point_<_Tp>> &_points)
+    vector<size_t> index_unique(const vector<Point_<_Tp>> &_points)
     {
         typedef tuple<Point_<_Tp>, size_t> point_index;
         auto sort_point_index = [](point_index a, point_index b)->bool { return lexicographicalSort2d(std::get<0>(a), std::get<0>(b)); };
@@ -254,12 +254,17 @@ namespace cv { namespace separableFundamentalMatrix
         return ret;
     }
 
-    Mat randomIntMat(int rows, int cols, int min, int max)
-    {
-        Mat ret(rows, cols, CV_32S);
-        cv::randu(ret, Scalar(min), Scalar(max));
+    Mat randomIntMat(int rows, int cols, int min, int max);
 
-        return ret;
+    template <typename _Tp>
+    vector<Vec<_Tp,4>> concatenate(const vector<Point_<_Tp>> &points1, const vector<Point_<_Tp>> &points2)
+    {
+        vector<Vec<_Tp,4>> points;
+        for (size_t i = 0; i < points1.size(); i++)
+        {
+            points.push_back(Vec<_Tp,4>(points1[i].x,points1[i].y, points2[i].x,points2[i].y));
+        }
+        return points;
     }
 
 }}

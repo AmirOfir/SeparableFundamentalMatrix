@@ -4,18 +4,12 @@ using namespace cv;
 using namespace std;
 namespace cv {
     namespace separableFundamentalMatrix {
-
-        void WhereCondition(const InputArray pts, vector<int> &firstDimension,
-            vector<int> &secondDimension, bool(*condition)(float val))
+        Mat randomIntMat(int rows, int cols, int min, int max)
         {
-            Mat points = pts.getMat();
+            Mat ret(rows, cols, CV_32S);
+            cv::randu(ret, Scalar(min), Scalar(max));
 
-            // First dimension
-            for (size_t i = 0; i < points.size().height; i++)
-            {
-
-            }
-
+            return ret;
         }
 
     }
