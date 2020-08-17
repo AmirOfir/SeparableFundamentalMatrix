@@ -234,9 +234,6 @@ namespace cv { namespace separableFundamentalMatrix
         auto sort_point_index = [](point_index a, point_index b)->bool { return lexicographicalSort2d(std::get<0>(a), std::get<0>(b)); };
         auto compare_point_index = [](point_index a, point_index b)->bool {return std::get<0>(a) == std::get<0>(b); };
 
-        vector<int> ret;
-        if (!_points.size()) return ret;
-
         // Add the index field
         vector<point_index> vec;
         for (size_t i = 0; i < _points.size(); ++i)
@@ -248,6 +245,8 @@ namespace cv { namespace separableFundamentalMatrix
         // Unique
         vec.erase( std::unique(vec.begin(), vec.end(), compare_point_index), vec.end() ); 
         
+        // Get the index field
+        vector<size_t> ret;
         for (auto p : vec)
             ret.push_back(get<1>(p));
         
@@ -267,6 +266,24 @@ namespace cv { namespace separableFundamentalMatrix
         return points;
     }
 
+    template <typename _Tp>
+    vector<vector<Vec<_Tp,4>>> randomSamples(int numIterations, int k, const vector<Vec<_Tp,4>> &points)
+    {
+        Mat randomIndices = randomIntMat(numIterations, k, 0, points.size());
+        vector<vector<Vec<_Tp,4>>> ret;
+
+        for (size_t iteration = 0; iteration < numIterations; iteration++)
+        {
+            vector<Vec<_Tp,4>> curr;
+            for (int kIx = 0; kIx < k; kIx++)
+            {
+                curr.push_back(points[randomIndices.at<int>(iteration, kIx)]);
+            }
+            ret.push_back(curr);
+        }
+
+        return ret;
+    }
 }}
 
 
