@@ -116,7 +116,7 @@ void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string
 
 int main()
 {
-    test_findLineHomography();
+    //test_findLineHomography();
     //test_lineInliersRansac();
     //test_lineHomographyError();
     //test_normalizeCoordinatesByLastCol();

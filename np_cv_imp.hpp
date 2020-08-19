@@ -143,11 +143,11 @@ namespace cv { namespace separableFundamentalMatrix
     }
 
     template <class InputIterator, class UnaryPredicate>
-    vector<int64> index_if(InputIterator first, InputIterator last, UnaryPredicate pred)
+    vector<int> index_if(InputIterator first, InputIterator last, UnaryPredicate pred)
     {
-        vector<int64> ret;
+        vector<int> ret;
 
-        int64 i = 0;
+        int i = 0;
         while (first != last) 
         {
             if (pred(*first)) 

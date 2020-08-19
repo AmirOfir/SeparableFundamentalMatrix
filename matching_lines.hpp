@@ -18,7 +18,7 @@ namespace cv { namespace separableFundamentalMatrix
 
     struct line_info
     {
-        vector<int64> matching_indexes;
+        vector<int> matching_indexes;
         Point3f line_eq_abc;
         Point3f line_eq_abc_norm;
         Point2f bottom_left_edge_point;

@@ -6,6 +6,12 @@ using namespace cv;
 using namespace std;
 namespace cv {
     namespace separableFundamentalMatrix {
+        struct MaxDistanceOnLineResult
+        {
+            vector<int> indices;
+            float maxDistance;
+            float minDistance;
+        };
 
 
         // Helper - Multiply matrix with vector
@@ -155,10 +161,10 @@ namespace cv {
                 auto matchingPoints = VecMatchingPoints<float>(matchingPoints1, matchingPoints2);
                 auto lineInliersResult = lineInliersRansac(num_line_ransac_iterations, matchingPoints);
 
-                if (lineInliersResult.inliers.size() < 4)
+                if (lineInliersResult.inlierIndexes.size() < 4)
                     continue;
 
-                auto inlierPoints = byIndices<float>(matchingPoints1, lineInliersResult.inliers);
+                auto inlierPoints = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
             }
 
         }
@@ -224,7 +230,7 @@ namespace cv {
                 line_eq.z = 0;
             }
 
-            vector<int64> matching_indexes;
+            vector<int> matching_indexes;
             {
                 float scale = sqrtf((line_eq.x * line_eq.x) + (line_eq.y * line_eq.y));
                 vector<float> d = MatrixVectorMul(pts, line_eq, 1.f / scale, true);
