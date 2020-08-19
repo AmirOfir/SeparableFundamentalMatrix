@@ -6,6 +6,7 @@
 #ifndef _OPENCV_MATCHING_POINTS_H_
 #define _OPENCV_MATCHING_POINTS_H_
 
+#include <numeric>
 #include <opencv2/opencv.hpp>
 #include <opencv2\core\core_c.h>
 #include "np_cv_imp.hpp"
@@ -54,6 +55,24 @@ namespace cv { namespace separableFundamentalMatrix
             MatchingPoints<_Tp> ret;
             ret.left = _left[index];
             ret.right = _right[index];
+            return ret;
+        }
+
+        VecMatchingPoints randomSample(uint sizeOfsample) const
+        {
+            VecMatchingPoints ret;
+
+            std::vector<int> v(size()) ; // vector with N ints.
+            iota (v.begin(), v.end(), 0); // Fill with 0, 1, ..., 99.
+            random_shuffle(v.begin(), v.end());
+            
+            for (auto i = 0; i < sizeOfsample; i++)
+            {
+                int ix = v[i];
+                ret._left.push_back(_left[ix]);
+                ret._right.push_back(_right[ix]);
+            }
+
             return ret;
         }
 
