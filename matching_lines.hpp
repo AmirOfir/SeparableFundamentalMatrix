@@ -8,6 +8,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include "np_cv_imp.hpp"
+#include "line_homography.hpp"
 
 namespace cv { namespace separableFundamentalMatrix
 {

@@ -76,8 +76,8 @@ namespace cv {
 
         vector<int> uniqueIntersectedPoints(const vector<Point2f> &matchingPoints1, const vector<Point2f> &matchingPoints2)
         {
-            vector<int> uniqueIdx1 = index_unique(vector<Point>(matchingPoints1.begin(), matchingPoints1.end()));
-            vector<int> uniqueIdx2 = index_unique(vector<Point>(matchingPoints2.begin(), matchingPoints2.end()));
+            vector<size_t> uniqueIdx1 = index_unique(vector<Point>(matchingPoints1.begin(), matchingPoints1.end()));
+            vector<size_t> uniqueIdx2 = index_unique(vector<Point>(matchingPoints2.begin(), matchingPoints2.end()));
 
             vector<int> unique_idx;
             intersect1d(uniqueIdx1.begin(), uniqueIdx1.end(), uniqueIdx2.begin(), uniqueIdx2.end(), back_inserter(unique_idx));
@@ -152,6 +152,7 @@ namespace cv {
                 matchingPoints2 = byIndices<float>(matchingPoints2, uniqueIdx);
 
                 // Find inliers, inlier_idx_homography - index of inliers of all the line points
+                lineRansac(num_line_ransac_iterations, matchingPoints1, matchingPoints2);
             }
 
         }

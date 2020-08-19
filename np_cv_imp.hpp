@@ -269,6 +269,7 @@ namespace cv { namespace separableFundamentalMatrix
     template <typename _Tp>
     vector<vector<Vec<_Tp,4>>> randomSamples(int numIterations, int k, const vector<Vec<_Tp,4>> &points)
     {
+        
         Mat randomIndices = randomIntMat(numIterations, k, 0, points.size());
         vector<vector<Vec<_Tp,4>>> ret;
 
@@ -284,6 +285,9 @@ namespace cv { namespace separableFundamentalMatrix
 
         return ret;
     }
+
+    void matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector, OutputArray _ret);
+    
 }}
 
 
