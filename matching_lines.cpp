@@ -150,7 +150,7 @@ namespace cv {
                 // Filter
                 matchingPoints1 = byIndices<float>(matchingPoints1, uniqueIdx);
                 matchingPoints2 = byIndices<float>(matchingPoints2, uniqueIdx);
-                auto matchingPoints = MatchingPoints<float>::FromVectors(matchingPoints1, matchingPoints2);
+                auto matchingPoints = VecMatchingPoints<float>(matchingPoints1, matchingPoints2);
 
                 // Find inliers, inlier_idx_homography - index of inliers of all the line points
                 lineRansac(num_line_ransac_iterations, matchingPoints);

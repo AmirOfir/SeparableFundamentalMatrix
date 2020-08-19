@@ -10,7 +10,8 @@ void normalizeCoordinatesByLastCol(InputArray _src, OutputArray _dst)
 {
     Mat src = _src.getMat();
     Mat lastCol = Scalar(1.) / (src.col(src.cols - 1) + 1e-10);
-    matrixVectorElementwiseMultiplication(_src, lastCol, _dst);
+    Mat ret = matrixVectorElementwiseMultiplication(_src, lastCol);
+    _dst.assign(ret);
 /*def normalize_coordinates(pts):
     return pts / (pts[:, -1].reshape((-1, 1))+1e-10)#avoid divid by zero*/
 }

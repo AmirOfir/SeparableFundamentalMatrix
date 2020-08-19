@@ -256,7 +256,7 @@ namespace cv { namespace separableFundamentalMatrix
     Mat randomIntMat(int rows, int cols, int min, int max);
 
     template <typename _Tp>
-    Mat PointVectorToMat(const vector<Point_<_Tp>> &vec)
+    Mat pointVectorToMat(const vector<Point_<_Tp>> &vec)
     {
         Mat mat((int)vec.size(), 2, traits::Type<_Tp>::value, (void*)vec.data());
         return mat;
@@ -296,7 +296,7 @@ namespace cv { namespace separableFundamentalMatrix
     }
     */
 
-    void matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector, OutputArray _ret);
+    Mat matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector);
     
 }}
 

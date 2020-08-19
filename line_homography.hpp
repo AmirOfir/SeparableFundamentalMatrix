@@ -19,7 +19,7 @@ namespace cv {
              output: The 2x2 (1d) line homography between the points
         */
         template <typename _Tp>
-        Mat findLineHomography(const vector<MatchingPoints<_Tp>> &matchingPoints)
+        Mat findLineHomography(const VecMatchingPoints<_Tp> &matchingPoints)
         {
             int numPoints = (int)matchingPoints.size();
             Mat A = Mat::zeros(numPoints, 4, CV_32F);
@@ -41,25 +41,29 @@ namespace cv {
         void normalizeCoordinatesByLastCol(InputArray _src, OutputArray _dst);
         
         template <typename _Tp>
-        Mat lineHomographyError(Mat model, const vector<MatchingPoints<_Tp>> &data)
+        Mat lineHomographyError(Mat model, const VecMatchingPoints<_Tp> &data)
         {
-            Mat src, dst;
-            MatchingPoints<_Tp>::ToMatrices(data, src, dst);
-            cout << src;
+            CV_Assert(traits::Type<_Tp>::value == model.type());
+            Mat src = data.leftMat();
+            Mat dst = data.rightMat();
+
             try
             {
-                auto dst_H = model * dst.t();
+                auto dst_H = model * src.t();
                 auto src_H = model.inv() * dst.t();
                 Mat resultL, resultR;
-
+            
                 normalizeCoordinatesByLastCol(src_H.t(), resultL);
                 normalizeCoordinatesByLastCol(dst_H.t(), resultR);
+            
+                resultL = matrixVectorElementwiseMultiplication(resultL, src.col(src.cols - 1));
+                resultR = matrixVectorElementwiseMultiplication(resultR, dst.col(dst.cols - 1));
 
-                matrixVectorElementwiseMultiplication(resultL, src.col(src.cols - 1), resultL);
-                matrixVectorElementwiseMultiplication(resultR, dst.col(dst.cols - 1), resultR);
+                resultL = src - resultL;
+                resultR = dst - resultR;
 
-                cv::pow(src - resultL, 2, resultL);
-                cv::pow(src - resultR, 2, resultR);
+                cv::pow(resultL, 2, resultL);
+                cv::pow(resultR, 2, resultR);
 
                 Mat result = resultL + resultR;
                 cv::reduce(result, result, 1, CV_REDUCE_SUM, result.type());
@@ -71,8 +75,8 @@ namespace cv {
             {
                 return Mat();
             }
-        }
-/*
+
+            /*
 def homography_err(data,model):
     pts_src =data[:,0:2]
     pts_dest=data[:,2:4]
@@ -84,13 +88,14 @@ def homography_err(data,model):
     except:
         return np.inf
         */
+        }
 
 
         template <typename _Tp>
-        void lineRansac(int numIterations, const vector<MatchingPoints<_Tp>> &matchingPoints, float inlierTh = 0.35)
+        void lineRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, float inlierTh = 0.35)
         {
             const int k = 3;
-            auto dataSamples = MatchingPoints<_Tp>::RandomSamples(matchingPoints, numIterations, k);
+            auto dataSamples = VecMatchingPoints<_Tp>::randomSamples(matchingPoints, numIterations, k);
             vector<Mat> modelSamples;
             for (auto x : dataSamples)
                 modelSamples.push_back(findLineHomography(x));
