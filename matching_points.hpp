@@ -16,58 +16,65 @@ namespace cv { namespace separableFundamentalMatrix
     using namespace std;
     
     template <typename _Tp>
-    class MatchingPoints
+    struct MatchingPoints
     {
-    public:
         Point_<_Tp> left;
         Point_<_Tp> right;
+    };
 
-        static vector<MatchingPoints> FromVectors(const vector<Point_<_Tp>> &left, const vector<Point_<_Tp>> &right)
+    template <typename _Tp>
+    class VecMatchingPoints {
+    private:
+        vector<Point_<_Tp>> _left;
+        vector<Point_<_Tp>> _right;
+    public:
+        VecMatchingPoints() {}
+        VecMatchingPoints(const VecMatchingPoints &cpy) : _left(cpy._left), _right(cpy._right) {}
+        VecMatchingPoints(const vector<Point_<_Tp>> &left, const vector<Point_<_Tp>> &right) : _left(left), _right(right)
         {
             CV_Assert(left.size() == right.size());
-            vector<MatchingPoints> ret;
-            for (size_t i = 0; i < left.size(); i++)
-            {
-                MatchingPoints curr;
-                curr.left = left[i];
-                curr.right = right[i];
-                ret.push_back(curr);
-            }
+        }
+        
+        size_t size() const { return _left.size(); }
+        
+        Mat leftMat() const 
+        {
+            Mat ret = pointVectorToMat(_left);
             return ret;
         }
 
-        static vector<vector<MatchingPoints>> RandomSamples(const vector<MatchingPoints> &source, uint iterations, uint sizeOfSample)
+        Mat rightMat() const
         {
-            vector<vector<MatchingPoints>> ret;
-            Mat randomIndices = randomIntMat(iterations, sizeOfSample, 0, source.size());
+            Mat ret = pointVectorToMat(_right);
+            return ret;
+        }
+
+        const MatchingPoints<_Tp> operator[](int index) const
+        {
+            MatchingPoints<_Tp> ret;
+            ret.left = _left[index];
+            ret.right = _right[index];
+            return ret;
+        }
+
+        static vector<VecMatchingPoints> randomSamples(const VecMatchingPoints &source, uint iterations, uint sizeOfSample)
+        {
+            vector<VecMatchingPoints> ret;
+            Mat randomIndices = randomIntMat(iterations, sizeOfSample, 0, (int)source.size());
             for (uint iteration = 0; iteration < iterations; iteration++)
             {
-                vector<MatchingPoints> curr;
+                VecMatchingPoints curr;
                 ret.push_back(curr);
                 for (uint i = 0; i < sizeOfSample; i++)
                 {
-                    curr.push_back(source[randomIndices.at<int>(iteration, i)]);
+                    int ix = randomIndices.at<int>(iteration, i);
+                    curr._left.push_back(source._left[ix]);
+                    curr._right.push_back(source._right[ix]);
                 }
             }
             return ret;
         }
-
-        static void ToMatrices(const vector<MatchingPoints> &source, OutputArray _left, OutputArray _right)
-        {
-            CV_Assert(source.size());
-            vector<Point_<_Tp>> leftVec, rightVec;
-            for (size_t i = 0; i < source.size(); i++)
-            {
-                leftVec.push_back(source[i].left);
-                rightVec.push_back(source[i].right);
-            }
-            Mat leftMat = PointVectorToMat(leftVec);
-            Mat rightMat = PointVectorToMat(rightVec);
-            cout << leftMat;
-            _left..assign(leftMat);
-            _right.assign(rightMat);
-        }
-    };
+    };                    
 }}
 
 
