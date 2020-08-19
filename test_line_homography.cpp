@@ -11,30 +11,35 @@ void assert_same(Mat a, Mat b)
     diff = cv::abs(diff);
     cv::minMaxLoc(diff, &minval, &maxval);
     bool areIdentical = minval < 0.001;
+    if (!areIdentical)
+    {
+        cout << "first is " << a << endl;
+        cout << "second is " << b << endl;
+    }
     assert(areIdentical);
 }
 
-void test_lineHomography()
+void test_findLineHomography()
 {
-    float data[] = { 0.59337338,  0.22072658, -0.12062497,  0.76461587 };
+    float data[] = { 0.65253999,  0.11381846, -0.10702682,  0.74147298 };
     Mat expected(2, 2, CV_32F, data);
-    cout << expected.at<float>(0, 0) << "," << expected.at<float>(0, 1) << "," << expected.at<float>(1, 0) << "," << expected.at<float>(1, 1) << endl;
+
     vector<Point2f> left
     {
-        Point2f(1404.90829526,  697.53539   ),
-        Point2f(1368.16594788,  663.27259867),
-        Point2f(1319.22244357,  617.63204506)
+        Point2f(1247.61317678,  550.85532717),
+        Point2f(1322.13497292,  620.34802247),
+        Point2f(1350.66748904,  646.95502272)
     };
     vector<Point2f> right
     {
-        Point2f(962.34180838,  354.54451947),
-        Point2f(934.69049355,  333.70775526),
-        Point2f(896.34750509,  304.81423557)
+        Point2f(842.31803851,  264.10010453),
+        Point2f(898.83713967,  306.69031014),
+        Point2f(920.55055581,  323.0525459)
     };
     auto matchingPoints = VecMatchingPoints<float>(left, right);
-    Mat ret = findLineHomography( matchingPoints );
+    Mat result = findLineHomography( matchingPoints );
 
-    assert_same(ret, expected);
+    assert_same(result, expected);
 }
 
 void test_lineHomographyError()
@@ -124,4 +129,41 @@ void test_normalizeCoordinatesByLastCol()
     cv::minMaxLoc(diff, &minval, &maxval);
     bool areIdentical = minval < 0.001;
     assert(areIdentical);
+}
+
+void test_lineInliersRansac()
+{
+    vector<Point2d> left{
+        Point2d( 1368.16594788,  663.27259867),
+        Point2d( 1272.73827193,  574.28485614),
+        Point2d( 1319.22244357,  617.63204506),
+        Point2d( 1300.41905565,  600.09760313),
+        Point2d( 1322.13497292,  620.34802247),
+        Point2d( 1350.66748904,  646.95502272),
+        Point2d( 1257.33395268,  559.92009684),
+        Point2d( 1404.90829526,  697.53539   ),
+        Point2d( 1291.72343069,  591.98880212),
+        Point2d( 1316.54069944,  615.13127834),
+        Point2d( 1308.0230798 ,  607.18846997),
+        Point2d( 1209.51181494,  515.32523442),
+        Point2d( 1247.61317678,  550.85532717)
+    };
+    vector<Point2d> right{
+         Point2d(934.69049355,  333.70775526),
+         Point2d(862.43231627,  279.25730285),
+         Point2d(896.34750509,  304.81423557),
+         Point2d(883.07281945,  294.81104056),
+         Point2d(898.83713967,  306.69031014),
+         Point2d(920.55055581,  323.0525459 ),
+         Point2d(849.99620546,  269.88601942),
+         Point2d(962.34180838,  354.54451947),
+         Point2d(876.50288223,  289.86023682),
+         Point2d(894.4124638 ,  303.3560771 ),
+         Point2d(888.29166853,  298.74372616),
+         Point2d(814.3592433 ,  243.03163719),
+         Point2d(842.31803851,  264.10010453)
+    };
+
+    auto matchingPoints = VecMatchingPoints<double>(left, right);
+    lineInliersRansac(70, matchingPoints);
 }

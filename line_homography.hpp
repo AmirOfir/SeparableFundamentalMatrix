@@ -22,31 +22,34 @@ namespace cv {
         Mat findLineHomography(const VecMatchingPoints<_Tp> &matchingPoints)
         {
             int numPoints = (int)matchingPoints.size();
-            Mat A = Mat::zeros(numPoints, 4, CV_32F);
+            Mat A = Mat::zeros(numPoints, 4, traits::Type<_Tp>::value);
 
             for (int n = 0; n < numPoints; n++)
             {
                 MatchingPoints<_Tp> point = matchingPoints[n];
                 
-                A.at<float>(n, 0) = point.left.x * point.right.y;
-                A.at<float>(n, 1) = point.left.y * point.right.y;
-                A.at<float>(n, 2) = - point.left.x * point.right.x;
-                A.at<float>(n, 3) = - point.left.y * point.right.x;
+                A.at<_Tp>(n, 0) = point.left.x * point.right.y;
+                A.at<_Tp>(n, 1) = point.left.y * point.right.y;
+                A.at<_Tp>(n, 2) = - point.left.x * point.right.x;
+                A.at<_Tp>(n, 3) = - point.left.y * point.right.x;
             }
             cv::SVD svd(A, SVD::Flags::FULL_UV);
     
-            return svd.vt.row(3);
+            return svd.vt.row(3).reshape(0,2);
         }
 
         void normalizeCoordinatesByLastCol(InputArray _src, OutputArray _dst);
         
+        /*
+            Find the homography error for each matching points
+        */
         template <typename _Tp>
         Mat lineHomographyError(Mat model, const VecMatchingPoints<_Tp> &data)
         {
             CV_Assert(traits::Type<_Tp>::value == model.type());
             Mat src = data.leftMat();
             Mat dst = data.rightMat();
-
+            
             try
             {
                 auto dst_H = model * src.t();
@@ -71,8 +74,9 @@ namespace cv {
         
                 return result;
             }
-            catch (...)
+            catch (const Exception &exp)
             {
+                
                 return Mat();
             }
 
@@ -90,15 +94,41 @@ def homography_err(data,model):
         */
         }
 
+        struct LineInliersRansacResult
+        {
+            vector<int> inliers;
+            double meanError;
+        };
 
         template <typename _Tp>
-        void lineRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, float inlierTh = 0.35)
+        LineInliersRansacResult lineInliersRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, float inlierTh = 0.35)
         {
             const int k = 3;
-            auto dataSamples = VecMatchingPoints<_Tp>::randomSamples(matchingPoints, numIterations, k);
+            vector<Mat> modelErrors;
+            vector<double> modelInliers;
+            for (int i = 0; i < numIterations; i++)
+            {
+                auto sample = matchingPoints.randomSample(k);
+                auto sampleModel = findLineHomography(sample);
+                auto modelError = lineHomographyError(sampleModel, matchingPoints);
+                if (modelError.empty())
+                    continue;
+                
+                auto modelInlier = cv::sum(modelError < inlierTh).val[0];
+                
+                modelErrors.push_back(modelError);
+                modelInliers.push_back(modelInlier);
+            }
+            int bestIdxRansac = max_element(modelInliers.begin(), modelInliers.end()) - modelInliers.begin();
+            auto inliers = modelErrors[bestIdxRansac] < inlierTh;
+            cout << inliers;
+
+            LineInliersRansacResult ret;
+            return ret;
+            /*auto dataSamples = VecMatchingPoints<_Tp>::randomSamples(matchingPoints, numIterations, k);
             vector<Mat> modelSamples;
             for (auto x : dataSamples)
-                modelSamples.push_back(findLineHomography(x));
+                modelSamples.push_back(findLineHomography(x));*/
         }
         /*def ransac_get_line_inliers(n_iters,line1_pts,line2_pts,inlier_th=0.35):
     data           = np.concatenate((line1_pts,line2_pts),axis=1)

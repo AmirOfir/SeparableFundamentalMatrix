@@ -12,8 +12,9 @@ namespace opencv_test {
 //using namespace cv::intensity_transform;
     
 }
-void test_lineHomography();
+void test_findLineHomography();
 void test_intersect1d();
 void test_normalizeCoordinatesByLastCol();
 void test_lineHomographyError();
+void test_lineInliersRansac();
 #endif
