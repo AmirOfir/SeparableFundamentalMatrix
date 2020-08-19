@@ -96,12 +96,12 @@ def homography_err(data,model):
 
         struct LineInliersRansacResult
         {
-            vector<int> inliers;
+            vector<int> inlierIndexes;
             double meanError;
         };
 
         template <typename _Tp>
-        LineInliersRansacResult lineInliersRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, float inlierTh = 0.35)
+        LineInliersRansacResult lineInliersRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, _Tp inlierTh = 0.35)
         {
             const int k = 3;
             vector<Mat> modelErrors;
@@ -113,33 +113,38 @@ def homography_err(data,model):
                 auto modelError = lineHomographyError(sampleModel, matchingPoints);
                 if (modelError.empty())
                     continue;
-                
+
                 auto modelInlier = cv::sum(modelError < inlierTh).val[0];
-                
+
                 modelErrors.push_back(modelError);
                 modelInliers.push_back(modelInlier);
             }
             int bestIdxRansac = max_element(modelInliers.begin(), modelInliers.end()) - modelInliers.begin();
-            auto inliers = modelErrors[bestIdxRansac] < inlierTh;
-            cout << inliers;
+
+            auto inlierIndexes = index_if(modelErrors[bestIdxRansac].begin<_Tp>(),
+                modelErrors[bestIdxRansac].end<_Tp>(),
+                [inlierTh](_Tp value) { return value < inlierTh; });
+
+            _Tp errorSum = 0;
+            for (auto inlierIndex : inlierIndexes)
+                errorSum += modelErrors[bestIdxRansac].at<_Tp>(inlierIndex, 0);
 
             LineInliersRansacResult ret;
+            ret.inlierIndexes = inlierIndexes;
+            ret.meanError = errorSum / inlierIndexes.size();
             return ret;
-            /*auto dataSamples = VecMatchingPoints<_Tp>::randomSamples(matchingPoints, numIterations, k);
-            vector<Mat> modelSamples;
-            for (auto x : dataSamples)
-                modelSamples.push_back(findLineHomography(x));*/
+
+            /*def ransac_get_line_inliers(n_iters,line1_pts,line2_pts,inlier_th=0.35):
+                data           = np.concatenate((line1_pts,line2_pts),axis=1)
+                random_samples = [random.sample(list(np.arange(len(data))), k=3) for _ in range(n_iters)]
+                data_samples   = [data[x, :] for x in random_samples]
+                model_samples  = [line_homography(x) for x in data_samples]
+                model_errs     = [homography_err(data,model_s) for model_s in model_samples]
+                model_inliers  = [np.sum(model_err<inlier_th) for model_err in model_errs]
+                best_idx_ransac= np.argmax(model_inliers)
+                inliers_idx    = np.arange(len(data))[model_errs[best_idx_ransac]<inlier_th]
+                return inliers_idx,np.mean(model_errs[best_idx_ransac][inliers_idx])*/
         }
-        /*def ransac_get_line_inliers(n_iters,line1_pts,line2_pts,inlier_th=0.35):
-    data           = np.concatenate((line1_pts,line2_pts),axis=1)
-    random_samples = [random.sample(list(np.arange(len(data))), k=3) for _ in range(n_iters)]
-    data_samples   = [data[x, :] for x in random_samples]
-    model_samples  = [line_homography(x) for x in data_samples]
-    model_errs     = [homography_err(data,model_s) for model_s in model_samples]
-    model_inliers  = [np.sum(model_err<inlier_th) for model_err in model_errs]
-    best_idx_ransac= np.argmax(model_inliers)
-    inliers_idx    = np.arange(len(data))[model_errs[best_idx_ransac]<inlier_th]
-    return inliers_idx,np.mean(model_errs[best_idx_ransac][inliers_idx])*/
     }
 }
 
