@@ -256,6 +256,14 @@ namespace cv { namespace separableFundamentalMatrix
     Mat randomIntMat(int rows, int cols, int min, int max);
 
     template <typename _Tp>
+    Mat PointVectorToMat(const vector<Point_<_Tp>> &vec)
+    {
+        Mat mat((int)vec.size(), 2, traits::Type<_Tp>::value, (void*)vec.data());
+        return mat;
+    }
+
+    /*
+    template <typename _Tp>
     vector<Vec<_Tp,4>> concatenate(const vector<Point_<_Tp>> &points1, const vector<Point_<_Tp>> &points2)
     {
         vector<Vec<_Tp,4>> points;
@@ -265,12 +273,13 @@ namespace cv { namespace separableFundamentalMatrix
         }
         return points;
     }
-
+    */
+    /*
     template <typename _Tp>
     vector<vector<Vec<_Tp,4>>> randomSamples(int numIterations, int k, const vector<Vec<_Tp,4>> &points)
     {
-        
         Mat randomIndices = randomIntMat(numIterations, k, 0, points.size());
+        randomIndices.begin
         vector<vector<Vec<_Tp,4>>> ret;
 
         for (size_t iteration = 0; iteration < numIterations; iteration++)
@@ -285,6 +294,7 @@ namespace cv { namespace separableFundamentalMatrix
 
         return ret;
     }
+    */
 
     void matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector, OutputArray _ret);
     

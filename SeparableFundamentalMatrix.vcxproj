@@ -120,6 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="line_homography.hpp" />
+    <ClInclude Include="matching_points.hpp" />
     <ClInclude Include="matching_lines.hpp" />
     <ClInclude Include="np_cv_imp.hpp" />
     <ClInclude Include="SFM_finder.hpp" />

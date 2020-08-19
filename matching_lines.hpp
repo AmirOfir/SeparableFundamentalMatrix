@@ -2,12 +2,13 @@
 // It is subject to the license terms in the LICENSE file found in the top-level directory
 // of this distribution and at http://opencv.org/license.html.
 
-#ifndef _OPENCV_MATCHING_POINTS_H_
-#define _OPENCV_MATCHING_POINTS_H_
+#ifndef _OPENCV_MATCHING_LINES_H_
+#define _OPENCV_MATCHING_LINES_H_
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include "np_cv_imp.hpp"
+#include "matching_points.hpp"
 #include "line_homography.hpp"
 
 namespace cv { namespace separableFundamentalMatrix
@@ -48,4 +49,4 @@ namespace cv { namespace separableFundamentalMatrix
 }}
 
 
-#endif // !_OPENCV_MATCHING_POINTS_H_
+#endif // !_OPENCV_MATCHING_LINES_H_
