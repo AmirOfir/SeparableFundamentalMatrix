@@ -298,6 +298,41 @@ namespace cv { namespace separableFundamentalMatrix
 
     Mat matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector);
     
+    /** @overload
+    @param a input vector of points
+    @param distance pointer to the returned distance value; NULL is used if not required.
+    @param firstIdx pointer to the returned first point location; NULL is used if not required;
+    @param secondIdx pointer to the returned secondPoint location; NULL is used if not required;
+    */
+    template <typename _Tp>
+    void maxDistance(const vector<Point_<_Tp>> &points, double *distance, int *firstIdx, int *secondIdx)
+    {
+        minMaxLoc
+        CV_Assert(points.size() > 2);
+        int aIdx = 0; bIdx = 1;
+        double maxDist = norm(points[0] - points[1]);
+        for (size_t i = 1; i < points.size() - 1; i++)
+        {
+            for (size_t j = i + 1; j < points.size(); j++)
+            {
+                double currDist = norm(points[i] - points[j]);
+
+                if (currDist > maxDist)
+                {
+                    aIdx = i;
+                    bIdx = j;
+                    maxDist = currDist;
+                }
+            }
+        }
+        if (distance)
+            *distance = maxDist;
+        if (firstIdx)
+            *firstIdx = aIdx;
+        if (secondIdx)
+            *secondIdx = bIdx;
+        return;
+    }
 }}
 
 

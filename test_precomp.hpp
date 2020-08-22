@@ -17,4 +17,5 @@ void test_intersect1d();
 void test_normalizeCoordinatesByLastCol();
 void test_lineHomographyError();
 void test_lineInliersRansac();
+void test_maxDistance();
 #endif
