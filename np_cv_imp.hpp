@@ -296,43 +296,42 @@ namespace cv { namespace separableFundamentalMatrix
     }
     */
 
-    Mat matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector);
-    
-    /** @overload
-    @param a input vector of points
-    @param distance pointer to the returned distance value; NULL is used if not required.
-    @param firstIdx pointer to the returned first point location; NULL is used if not required;
-    @param secondIdx pointer to the returned secondPoint location; NULL is used if not required;
-    */
     template <typename _Tp>
-    void maxDistance(const vector<Point_<_Tp>> &points, double *distance, int *firstIdx, int *secondIdx)
+    Mat matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector)
     {
-        minMaxLoc
-        CV_Assert(points.size() > 2);
-        int aIdx = 0; bIdx = 1;
-        double maxDist = norm(points[0] - points[1]);
-        for (size_t i = 1; i < points.size() - 1; i++)
+        /* Faster option */
+        Mat matrix = _matrix.getMat();
+        Mat ret = matrix.clone();
+        _Tp *retData = (_Tp *)ret.data;
+        _Tp *vecData = (_Tp *)_vector.getMat().data;
+        for (size_t row = 0; row < ret.rows; row++)
         {
-            for (size_t j = i + 1; j < points.size(); j++)
+            for (size_t col = 0; col < ret.cols; col++)
             {
-                double currDist = norm(points[i] - points[j]);
-
-                if (currDist > maxDist)
-                {
-                    aIdx = i;
-                    bIdx = j;
-                    maxDist = currDist;
-                }
+                *retData = (*retData) * (*vecData);
+                ++retData;
             }
+            ++vecData;
         }
-        if (distance)
-            *distance = maxDist;
-        if (firstIdx)
-            *firstIdx = aIdx;
-        if (secondIdx)
-            *secondIdx = bIdx;
-        return;
+        return ret;
+        /*
+        Mat matrix = _matrix.getMat();
+        Mat vector = _vector.getMat().clone();
+            
+        CV_Assert(matrix.type() == vector.type() && matrix.rows == vector.rows && vector.cols == 1);
+        vector = Scalar(1) / vector;
+            
+        Mat ret = matrix.col(0) / vector;
+        for (size_t i = 1; i < matrix.cols; i++)
+        {
+            cv::hconcat(ret, matrix.col(i) / vector, ret);
+        }
+
+        return ret;
+        */
     }
+    
+    
 }}
 
 

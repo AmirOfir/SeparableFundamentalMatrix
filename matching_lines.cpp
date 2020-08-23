@@ -1,17 +1,13 @@
 #include "matching_lines.hpp"
 #include "np_cv_imp.hpp"
+#include "line_geometry.hpp"
 //#include <opencv2/features2d.hpp>
 
 using namespace cv;
 using namespace std;
 namespace cv {
     namespace separableFundamentalMatrix {
-        struct MaxDistanceOnLineResult
-        {
-            vector<int> indices;
-            float maxDistance;
-            float minDistance;
-        };
+        
 
 
         // Helper - Multiply matrix with vector
@@ -130,8 +126,8 @@ namespace cv {
             // start with the lines that shared the highest number of points, so we can do top-N
             // return a list index by the lines (k,j) with the projected points themself
             int num_line_ransac_iterations = int((log(0.01) / log(1 - pow(inlierRatio, 3)))) + 1;
-
-            vector<top_line> top_lines;
+            
+            vector<top_line> topLines;
 
             // Go over the top lines with the most number of shared points, project the points, store by the matching indices of the pair of lines
             int num_sorted_lines = min((int)num_shared_points_vote.size(), 450);
@@ -164,9 +160,38 @@ namespace cv {
                 if (lineInliersResult.inlierIndexes.size() < 4)
                     continue;
 
-                auto inlierPoints = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
-            }
+                auto inlierPoints1 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
+                auto inlierPoints2 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
+                
+                auto endpoints = intervalEndpoints(inlierPoints1);
+                auto median = intervalMedian(inlierPoints1, endpoints.firstIdx, endpoints.secondIdx);
+                
+                top_line curr;
+                curr.num_inliers = (int)lineInliersResult.inlierIndexes.size();
+                curr.line_points_1 = inlierPoints1;
+                curr.line_points_2 = inlierPoints2;
+                curr.line1_index = k;
+                curr.line2_index = j;
+                curr.inlier_selected_index = { endpoints.firstIdx, endpoints.secondIdx, median.medianIdx };
+                curr.selected_line_points1 = byIndices<float>(inlierPoints1, curr.inlier_selected_index);
+                curr.selected_line_points2 = byIndices<float>(inlierPoints2, curr.inlier_selected_index);
+                curr.max_dist = endpoints.distance;
+                curr.min_dist = median.minDistance;
+                curr.homg_err = lineInliersResult.meanError;
+                topLines.push_back(curr);
 
+            }
+            
+            if (topLines.size() < 2)
+                return;
+            sort(topLines.begin(), topLines.end(),
+                [](const top_line &line1, const top_line &line2) { return line1.min_dist <= line2.min_dist; });
+
+            top_line topTwoLines[2];
+            topTwoLines[0] = topLines[0];
+            //auto a = lineInfosImg1[topTwoLines[0].line1_index].line_eq_abc_norm.x;
+
+            //return topLines;
         }
 
         vector<float> findIntersectionPoints(float rho, float theta, const int im_size_w, const int im_size_h)

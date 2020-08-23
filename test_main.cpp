@@ -116,12 +116,16 @@ void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string
 
 int main()
 {
-    test_maxDistance();
+    //test_intervalEndpoints();
+    //test_intervalMedian();
+
+    //test_maxDistance();
     //test_findLineHomography();
     //test_lineInliersRansac();
     //test_lineHomographyError();
     //test_normalizeCoordinatesByLastCol();
-    return 0;
+    //test_matrixVectorElementwiseMultiplication();
+    //return 0;
     vector<tuple<string, string, string, string, float>> example_files = 
     {
         {

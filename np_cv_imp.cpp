@@ -13,22 +13,7 @@ namespace cv {
             return ret;
         }
 
-        Mat matrixVectorElementwiseMultiplication(InputArray _matrix, InputArray _vector)
-        {
-            Mat matrix = _matrix.getMat();
-            Mat vector = _vector.getMat().clone();
-            
-            CV_Assert(matrix.type() == vector.type() && matrix.rows == vector.rows && vector.cols == 1);
-            vector = Scalar(1) / vector;
-            
-            Mat ret = matrix.col(0) / vector;
-            for (size_t i = 1; i < matrix.cols; i++)
-            {
-                cv::hconcat(ret, matrix.col(i) / vector, ret);
-            }
-
-            return ret;
-        }
+        
 
     }
 }

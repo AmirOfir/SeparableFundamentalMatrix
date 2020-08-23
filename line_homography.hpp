@@ -38,7 +38,24 @@ namespace cv {
             return svd.vt.row(3).reshape(0,2);
         }
 
-        void normalizeCoordinatesByLastCol(InputArray _src, OutputArray _dst);
+        template <typename _Tp>
+        void normalizeCoordinatesByLastCol(InputArray _src, OutputArray _dst)
+        {
+            Mat src = _src.getMat();
+            CV_Assert(traits::Type<_Tp>::value == src.type());
+
+            Mat lastCol = src.col(src.cols - 1) + 1e-10;
+            _Tp *data = (_Tp *)lastCol.data;
+            for (size_t i = 0; i < lastCol.rows; i++)
+            {
+                data[i] = ((_Tp)1) / data[i];
+            }
+
+            Mat ret = matrixVectorElementwiseMultiplication<_Tp>(_src, lastCol);
+            _dst.assign(ret);
+            /*def normalize_coordinates(pts):
+                return pts / (pts[:, -1].reshape((-1, 1))+1e-10)#avoid divid by zero*/
+        }
         
         /*
             Find the homography error for each matching points
@@ -56,11 +73,11 @@ namespace cv {
                 auto src_H = model.inv() * dst.t();
                 Mat resultL, resultR;
             
-                normalizeCoordinatesByLastCol(src_H.t(), resultL);
-                normalizeCoordinatesByLastCol(dst_H.t(), resultR);
+                normalizeCoordinatesByLastCol<_Tp>(src_H.t(), resultL);
+                normalizeCoordinatesByLastCol<_Tp>(dst_H.t(), resultR);
             
-                resultL = matrixVectorElementwiseMultiplication(resultL, src.col(src.cols - 1));
-                resultR = matrixVectorElementwiseMultiplication(resultR, dst.col(dst.cols - 1));
+                resultL = matrixVectorElementwiseMultiplication<_Tp>(resultL, src.col(src.cols - 1));
+                resultR = matrixVectorElementwiseMultiplication<_Tp>(resultR, dst.col(dst.cols - 1));
 
                 resultL = src - resultL;
                 resultR = dst - resultR;

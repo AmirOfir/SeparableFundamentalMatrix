@@ -113,19 +113,25 @@ void test_byIndices()
     byIndices<float>(m, indices);
 }
 
-void test_maxDistance()
+void test_matrixVectorElementwiseMultiplication()
 {
-    vector<Point2f> vec
+    Mat1f mat(5,2);
+    for (size_t row = 0; row < mat.rows; row++)
     {
-       Point2d(1319.22244357,  617.63204506),
-       Point2d(1322.13497292,  620.34802247),
-       Point2d(1350.66748904,  646.95502272),
-       Point2d(1257.33395268,  559.92009684),
-       Point2d(1404.90829526,  697.53539),
-       Point2d(1316.54069944,  615.13127834),
-       Point2d(1209.51181494,  515.32523442)
-    };
-    int a, b;
-    double dist;
-    maxDistance(vec, &dist, &a, &b);
+        for (size_t col = 0; col < mat.cols; col++)
+        {
+            mat(row, col) = col;
+        }
+    }
+    Mat mat1 = mat;
+
+    Mat1f vec(5, 1);
+    for (size_t row = 0; row < vec.rows; row++)
+    {
+        vec(row, 0) = row + 1;
+    }
+    Mat vec1 = vec;
+    Mat m = matrixVectorElementwiseMultiplication<float>(mat, vec);
+
+
 }

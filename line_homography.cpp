@@ -6,16 +6,6 @@ using namespace cv::separableFundamentalMatrix;
 namespace cv {
     namespace separableFundamentalMatrix {
 
-void normalizeCoordinatesByLastCol(InputArray _src, OutputArray _dst)
-{
-    Mat src = _src.getMat();
-    Mat lastCol = Scalar(1.) / (src.col(src.cols - 1) + 1e-10);
-    Mat ret = matrixVectorElementwiseMultiplication(_src, lastCol);
-    _dst.assign(ret);
-/*def normalize_coordinates(pts):
-    return pts / (pts[:, -1].reshape((-1, 1))+1e-10)#avoid divid by zero*/
-}
-
 void FlattenToMat(const vector<Vec4f> &data, OutputArray _dst)
 {
     CV_Assert(data.size());
@@ -26,11 +16,6 @@ void FlattenToMat(const vector<Vec4f> &data, OutputArray _dst)
     }
     _dst.assign(mat);
 }
-
-
-
-
-
 
 //vector<MatchingPoints> randomSamples(int iterations, int sizeOfSample, const MatchingPoints &matchingPoints)
 //{
