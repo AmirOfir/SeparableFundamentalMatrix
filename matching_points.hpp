@@ -58,9 +58,9 @@ namespace cv { namespace separableFundamentalMatrix
             return ret;
         }
 
-        VecMatchingPoints randomSample(uint sizeOfsample) const
+        VecMatchingPoints<_Tp> randomSample(uint sizeOfsample) const
         {
-            VecMatchingPoints ret;
+            VecMatchingPoints<_Tp> ret;
 
             std::vector<int> v(size()) ; // vector with N ints.
             iota (v.begin(), v.end(), 0); // Fill with 0, 1, ..., 99.
@@ -76,13 +76,14 @@ namespace cv { namespace separableFundamentalMatrix
             return ret;
         }
 
-        static vector<VecMatchingPoints> randomSamples(const VecMatchingPoints &source, uint iterations, uint sizeOfSample)
+        template <typename _Tp>
+        static vector<VecMatchingPoints<_Tp>> randomSamples(const VecMatchingPoints<_Tp> &source, uint iterations, uint sizeOfSample)
         {
-            vector<VecMatchingPoints> ret;
+            vector<VecMatchingPoints<_Tp>> ret;
             Mat randomIndices = randomIntMat(iterations, sizeOfSample, 0, (int)source.size());
             for (uint iteration = 0; iteration < iterations; iteration++)
             {
-                VecMatchingPoints curr;
+                VecMatchingPoints<_Tp> curr;
                 ret.push_back(curr);
                 for (uint i = 0; i < sizeOfSample; i++)
                 {

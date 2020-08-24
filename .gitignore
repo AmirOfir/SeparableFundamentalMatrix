@@ -6,3 +6,4 @@ x64/
 .vs/
 *.filters
 *.user
+/packages/Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0

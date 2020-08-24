@@ -1,3 +1,4 @@
+
 #include <opencv2\opencv.hpp>
 #include <iostream>
 #include <cstdlib>
@@ -116,16 +117,6 @@ void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string
 
 int main()
 {
-    //test_intervalEndpoints();
-    //test_intervalMedian();
-
-    //test_maxDistance();
-    //test_findLineHomography();
-    //test_lineInliersRansac();
-    test_lineHomographyError();
-    //test_normalizeCoordinatesByLastCol();
-    //test_matrixVectorElementwiseMultiplication();
-    //return 0;
     vector<tuple<string, string, string, string, float>> example_files = 
     {
         {
@@ -188,4 +179,3 @@ int main()
     
     return 0;
 }
-

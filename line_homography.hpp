@@ -44,7 +44,7 @@ namespace cv {
             Mat src = _src.getMat();
             CV_Assert(traits::Type<_Tp>::value == src.type());
 
-            Mat lastCol = src.col(src.cols - 1) + 1e-10;
+            Mat lastCol = src.col(src.cols - 1) + 1e-10; // avoid divid by zero
             _Tp *data = (_Tp *)lastCol.data;
             for (size_t i = 0; i < lastCol.rows; i++)
             {
@@ -53,20 +53,58 @@ namespace cv {
 
             Mat ret = matrixVectorElementwiseMultiplication<_Tp>(_src, lastCol);
             _dst.assign(ret);
-            /*def normalize_coordinates(pts):
-                return pts / (pts[:, -1].reshape((-1, 1))+1e-10)#avoid divid by zero*/
         }
         
         /*
             Find the homography error for each matching points
+            Returns the error for each data point - the difference between the pixel and its projection
         */
         template <typename _Tp>
-        Mat lineHomographyError(Mat model, const VecMatchingPoints<_Tp> &data)
+        vector<double> lineHomographyError(Mat model, const VecMatchingPoints<_Tp> &data)
         {
+            const int lastCol = 1;
             CV_Assert(traits::Type<_Tp>::value == model.type());
+            vector<double> ret(data.size(), 100);
+
+            Mat left = data.leftMat();
+            Mat right = data.rightMat();
+            
+            try {
+                // Project the points from the left side using the computer homography
+                Mat right_H = model * left.t();
+
+                // Project the points from the right side using the inverse of the homography
+                Mat left_H = model.inv() * right.t();
+
+                // Normalization
+                normalizeCoordinatesByLastCol<_Tp>(right_H.t(), right_H);
+                normalizeCoordinatesByLastCol<_Tp>(left_H.t(), left_H);
+
+                // Calculate the error
+                for (size_t row = 0; row < data.size(); row++)
+                {
+                    //double error = 0;
+                    double rightError[2];
+                    double leftError[2];
+                    
+                    for (size_t col = 0; col < 2; col++)
+                    {
+                        rightError[col] = right.at<_Tp>(row,col) - (right_H.at<_Tp>(row, col) * right.at<_Tp>(row, lastCol));
+                        leftError[col] = left.at<_Tp>(row,col) - (left_H.at<_Tp>(row, col) * left.at<_Tp>(row, lastCol));
+                    }
+                    double error = pow(rightError[0], 2) + pow(leftError[0], 2) + pow(rightError[1], 2) + pow(leftError[1], 2);
+                    error = sqrt(error);
+                    ret[row] = error;
+                }
+                
+            }
+            catch (...) {
+
+            }
+            return ret;
+            /*
             Mat src = data.leftMat();
             Mat dst = data.rightMat();
-            
             try
             {
                 auto dst_H = model * src.t();
@@ -93,22 +131,8 @@ namespace cv {
             }
             catch (const Exception &exp)
             {
-                
                 return Mat();
-            }
-
-            /*
-def homography_err(data,model):
-    pts_src =data[:,0:2]
-    pts_dest=data[:,2:4]
-    pts_dest_H=np.dot(model,pts_src.T)
-    try:
-        pts_src_H = np.dot(np.linalg.inv(model), pts_dest.T)
-        return np.sqrt(np.sum((  pts_src -normalize_coordinates(pts_src_H.T) *pts_src[:,-1].reshape((-1, 1))) **2+
-                              (pts_dest  -normalize_coordinates(pts_dest_H.T)*pts_dest[:,-1].reshape((-1, 1)))**2,axis=1))
-    except:
-        return np.inf
-        */
+            }*/
         }
 
         struct LineInliersRansacResult
@@ -121,34 +145,39 @@ def homography_err(data,model):
         LineInliersRansacResult lineInliersRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, _Tp inlierTh = 0.35)
         {
             const int k = 3;
-            vector<Mat> modelErrors;
-            vector<double> modelInliers;
+            vector<double> fittestModelErrors;
+            int fittestModelInliers = 0;
+
             for (int i = 0; i < numIterations; i++)
             {
                 auto sample = matchingPoints.randomSample(k);
                 auto sampleModel = findLineHomography(sample);
-                auto modelError = lineHomographyError(sampleModel, matchingPoints);
-                if (modelError.empty())
-                    continue;
-
-                auto modelInlier = cv::sum(modelError < inlierTh).val[0];
-
-                modelErrors.push_back(modelError);
-                modelInliers.push_back(modelInlier);
+                auto modelErrors = lineHomographyError(sampleModel, matchingPoints);
+                int modelInliers = 0;
+                for (auto err : modelErrors)
+                {
+                    if (err < inlierTh)
+                        ++modelInliers;
+                }
+                if (modelInliers > fittestModelInliers)
+                {
+                    fittestModelErrors = move(modelErrors);
+                    fittestModelInliers = modelInliers;
+                }
             }
-            int bestIdxRansac = max_element(modelInliers.begin(), modelInliers.end()) - modelInliers.begin();
 
-            auto inlierIndexes = index_if(modelErrors[bestIdxRansac].begin<_Tp>(),
-                modelErrors[bestIdxRansac].end<_Tp>(),
-                [inlierTh](_Tp value) { return value < inlierTh; });
-
-            _Tp errorSum = 0;
-            for (auto inlierIndex : inlierIndexes)
-                errorSum += modelErrors[bestIdxRansac].at<_Tp>(inlierIndex, 0);
-
+            // Statistics from the fittests model
             LineInliersRansacResult ret;
-            ret.inlierIndexes = inlierIndexes;
-            ret.meanError = errorSum / inlierIndexes.size();
+            double errorSum = 0;
+            for (size_t i = 0; i < fittestModelErrors.size(); i++)
+            {
+                if (fittestModelErrors[i] < inlierTh)
+                {
+                    ret.inlierIndexes.push_back(i);
+                    errorSum += fittestModelErrors[i];
+                }
+            }
+            ret.meanError = errorSum / ret.inlierIndexes.size();
             return ret;
 
             /*def ransac_get_line_inliers(n_iters,line1_pts,line2_pts,inlier_th=0.35):

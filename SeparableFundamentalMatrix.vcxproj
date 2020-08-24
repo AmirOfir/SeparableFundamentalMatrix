@@ -22,7 +22,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -116,7 +116,9 @@
     <ClCompile Include="np_cv_imp.cpp" />
     <ClCompile Include="SFM_finder.cpp" />
     <ClCompile Include="test_line_geometry.cpp" />
-    <ClCompile Include="test_line_homography.cpp" />
+    <ClCompile Include="test_line_homography.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="test_main.cpp" />
     <ClCompile Include="test_matching_lines.cpp" />
     <ClCompile Include="test_np_cv_imp.cpp" />
