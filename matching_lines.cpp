@@ -87,7 +87,31 @@ namespace cv {
             return unique_idx;
         }
 
-        void getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
+        array<top_line,2> topTwoLinesWithMaxAngle(const vector<line_info> &lineInfosImg1, vector<top_line> &topLines)
+        {
+            sort(topLines.begin(), topLines.end(),
+                [](const top_line &line1, const top_line &line2) { return line1.min_dist < line2.min_dist; });
+
+            const top_line firstLine = topLines[0];
+
+            Point3f firstLineEq = lineInfosImg1[firstLine.line1_index].line_eq_abc_norm;
+            int lineCount = min(20, (int)topLines.size());
+            float maxAngle = -180;
+            int maxAngleIx;
+            for (int i = 1; i < lineCount; i++)
+            {
+                Point3f lineEq = lineInfosImg1[topLines[i].line1_index].line_eq_abc_norm;
+                float angle = std::acosf(std::min<float>((lineEq.x*firstLineEq.x) + (lineEq.y*firstLineEq.y), 1))*180/ CV_PI;
+                if (std::min(angle, 180-angle) > maxAngle)
+                {
+                    maxAngle = std::min(angle, 180-angle);
+                    maxAngleIx = i;
+                }
+            }
+            return { move(firstLine), move(topLines[maxAngleIx]) };
+        }
+
+        vector<top_line> getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
             const vector<line_info> &lineInfosImg2, int minSharedPoints, float inlierRatio)
         {
 
@@ -183,15 +207,11 @@ namespace cv {
             }
             
             if (topLines.size() < 2)
-                return;
-            sort(topLines.begin(), topLines.end(),
-                [](const top_line &line1, const top_line &line2) { return line1.min_dist <= line2.min_dist; });
-
-            top_line topTwoLines[2];
-            topTwoLines[0] = topLines[0];
-            //auto a = lineInfosImg1[topTwoLines[0].line1_index].line_eq_abc_norm.x;
-
-            //return topLines;
+                return {};
+            
+            auto topTwoLines = topTwoLinesWithMaxAngle(lineInfosImg1, topLines);
+            return { topTwoLines[0], topTwoLines[1] };
+            //return {};
         }
 
         vector<float> findIntersectionPoints(float rho, float theta, const int im_size_w, const int im_size_h)
@@ -308,7 +328,7 @@ namespace cv {
             return lineInfos;
         }
 
-        void cv::separableFundamentalMatrix::FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
+        vector<top_line> cv::separableFundamentalMatrix::FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
             const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
             int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio)
         {
@@ -317,9 +337,10 @@ namespace cv {
 
             Mat pts1Org = pts1.isMat() ? pts1.getMat() : pts1.getMat().t();
             Mat pts2Org = pts2.isMat() ? pts2.getMat() : pts2.getMat().t();
-
+            
+            vector<top_line> topMatchingLines;
             // we sample a small subset of features to use in the hough transform, if our sample is too sparse, increase it
-            for (auto i = 0; i < top_line_retries; i++)
+            for (auto i = 0; i < top_line_retries && topMatchingLines.size() < 2; i++)
             {
                 // rescale points and image size for fast line detection
                 hough_rescale = hough_rescale * 0.5;
@@ -334,18 +355,12 @@ namespace cv {
 
                 if (linesImg1.size() && linesImg2.size())
                 {
-                    getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, min_shared_points, inlier_ratio);
+                    topMatchingLines =
+                        getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, min_shared_points, inlier_ratio);
                 }
             }
-            /*
-                if len(lines_img1)!=0 and len(lines_img2) !=0:
-                    top_lines_by_inliers,lines1,lines2 = get_top_matching_lines(pts1, pts2, lines_img1, lines_img2,min_shared_points,inlier_ratio)
 
-                if len(top_lines_by_inliers)>=2: # We found the lines
-                    break
-
-                print("Sep F 4pts:Rescale again")
-                */
+            return topMatchingLines;
         }
 
     }

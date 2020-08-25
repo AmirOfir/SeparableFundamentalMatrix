@@ -5,7 +5,6 @@
 #include <fstream>
 #include <type_traits>
 #include "SFM_finder.hpp"
-#include "test_precomp.hpp"
 
 using namespace cv;
 using namespace cv::separableFundamentalMatrix;

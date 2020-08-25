@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Source\opencv_install\include;..\SeparableFundamentalMatrix;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Source\opencv_install\include;..\;$(IncludePath)</IncludePath>
     <LibraryPath>E:\Source\opencv_install\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
