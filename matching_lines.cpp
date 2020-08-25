@@ -8,8 +8,6 @@ using namespace std;
 namespace cv {
     namespace separableFundamentalMatrix {
         
-
-
         // Helper - Multiply matrix with vector
         vector<float> MatrixVectorMul(Mat mat2d, Point3f vec, float scale = 1, bool absolute = false)
         {

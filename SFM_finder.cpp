@@ -1,6 +1,8 @@
 #include "SFM_finder.hpp"
 #include "matching_lines.hpp"
+#include "sfm_ransac.hpp"
 
+using namespace cv::separableFundamentalMatrix;
 
 // pts1 is Mat of shape(X,2)
 // pts2 is Mat of shape(X,2)
@@ -15,7 +17,15 @@ Mat cv::separableFundamentalMatrix::findSeparableFundamentalMat(InputArray pts1,
     else if (hough_rescale > 1) // Only subsample
         hough_rescale = 1;
 
-    FindMatchingLines(im_size_h_org, im_size_w_org, pts1, pts2, top_line_retries, hough_rescale, max_distance_pts_line, min_hough_points, pixel_res, theta_res, num_matching_pts_to_use, min_shared_points, inlier_ratio);
+    auto topMatchingLines = FindMatchingLines(im_size_h_org, im_size_w_org, pts1, pts2, top_line_retries, hough_rescale, max_distance_pts_line, min_hough_points, pixel_res, theta_res, num_matching_pts_to_use, min_shared_points, inlier_ratio);
+
+    // We have at least one line
+    if (topMatchingLines.size())
+    {
+        Mat data = prepareDataForRansac(pts1, pts2);
+        vector<Mat> lines = prepareLinesForRansac(topMatchingLines);
+        uint maxNumIterations = (uint)std::floor(1 + std::log(0.01) / std::log(1 - pow(inlier_ratio, 5)));
+    }
 
     return Mat();
 }

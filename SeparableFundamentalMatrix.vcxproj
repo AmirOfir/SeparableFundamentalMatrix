@@ -110,11 +110,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="line_geometry.cpp" />
     <ClCompile Include="line_homography.cpp" />
     <ClCompile Include="matching_lines.cpp" />
     <ClCompile Include="np_cv_imp.cpp" />
     <ClCompile Include="SFM_finder.cpp" />
+    <ClCompile Include="sfm_ransac.cpp" />
     <ClCompile Include="test_line_geometry.cpp" />
     <ClCompile Include="test_line_homography.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -130,6 +130,7 @@
     <ClInclude Include="matching_lines.hpp" />
     <ClInclude Include="np_cv_imp.hpp" />
     <ClInclude Include="SFM_finder.hpp" />
+    <ClInclude Include="sfm_ransac.hpp" />
     <ClInclude Include="test_precomp.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
