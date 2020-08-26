@@ -91,7 +91,7 @@ namespace cv {
                 [](const top_line &line1, const top_line &line2) { return line1.min_dist < line2.min_dist; });
 
             const top_line firstLine = topLines[0];
-
+            
             Point3f firstLineEq = lineInfosImg1[firstLine.line1_index].line_eq_abc_norm;
             int lineCount = min(20, (int)topLines.size());
             float maxAngle = -180;
@@ -152,7 +152,7 @@ namespace cv {
             vector<top_line> topLines;
 
             // Go over the top lines with the most number of shared points, project the points, store by the matching indices of the pair of lines
-            int num_sorted_lines = min((int)num_shared_points_vote.size(), 450);
+            int num_sorted_lines = min((int)num_shared_points_vote.size(), 50);
             for (size_t n = 0; n < num_sorted_lines; n++)
             {
                 int k = num_shared_points_vote[n].y;
