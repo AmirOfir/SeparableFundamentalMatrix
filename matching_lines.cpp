@@ -7,22 +7,6 @@ using namespace cv;
 using namespace std;
 using namespace cv::separableFundamentalMatrix;
 
-        
-        // Helper - Multiply matrix with vector
-        vector<float> MatrixVectorMul(Mat mat2d, Point3f vec, float scale = 1, bool absolute = false)
-        {
-            vector<float> ret;
-            ret.reserve(mat2d.size().height);
-
-            for (size_t i = 0; i < mat2d.size().height; i++)
-            {
-                float curr = (vec.x * mat2d.at<float>(i, 0)) + (vec.y * mat2d.at<float>(i, 1)) + vec.z;
-                if (absolute)
-                    curr = abs(curr);
-                ret.push_back(curr * scale);
-            }
-            return ret;
-        }
 
         Mat createHeatmap(InputArray ptsImg1, InputArray ptsImg2, const vector<line_info> &lineInfosImg1, const vector<line_info> &lineInfosImg2)
         {
@@ -67,14 +51,16 @@ using namespace cv::separableFundamentalMatrix;
             return heatmap;
         }
 
-        vector<Point2f> projectPointsOnLineByInices(InputArray _pts, const line_info &lineInfo, vector<int> indices)
+        template <typename _Tp>
+        vector<Point_<_Tp>> projectPointsOnLineByInices(InputArray _pts, const line_info &lineInfo, vector<int> indices)
         {
-            vector<Point2f> filteredPts;
-            filteredPts = byIndices<float>(_pts, indices);
+            vector<Point_<_Tp>> filteredPts;
+            filteredPts = byIndices<_Tp>(_pts, indices);
             return projectPointsOnLine(lineInfo.bottom_left_edge_point, lineInfo.top_right_edge_point, filteredPts);
         }
 
-        vector<int> uniqueIntersectedPoints(const vector<Point2f> &matchingPoints1, const vector<Point2f> &matchingPoints2)
+        template <typename _Tp>
+        vector<int> uniqueIntersectedPoints(const vector<Point_<_Tp>> &matchingPoints1, const vector<Point_<_Tp>> &matchingPoints2)
         {
             vector<size_t> uniqueIdx1 = index_unique(vector<Point>(matchingPoints1.begin(), matchingPoints1.end()));
             vector<size_t> uniqueIdx2 = index_unique(vector<Point>(matchingPoints2.begin(), matchingPoints2.end()));
@@ -92,14 +78,14 @@ using namespace cv::separableFundamentalMatrix;
 
             const top_line firstLine = topLines[0];
             
-            Point3f firstLineEq = lineInfosImg1[firstLine.line1_index].line_eq_abc_norm;
+            auto firstLineEq = lineInfosImg1[firstLine.line1_index].line_eq_abc_norm;
             int lineCount = min(20, (int)topLines.size());
-            float maxAngle = -180;
+            double maxAngle = -180;
             int maxAngleIx;
             for (int i = 1; i < lineCount; i++)
             {
-                Point3f lineEq = lineInfosImg1[topLines[i].line1_index].line_eq_abc_norm;
-                float angle = std::acosf(std::min<float>((lineEq.x*firstLineEq.x) + (lineEq.y*firstLineEq.y), 1))*180/ CV_PI;
+                auto lineEq = lineInfosImg1[topLines[i].line1_index].line_eq_abc_norm;
+                double angle = std::acosf(std::min<double>((lineEq.x*firstLineEq.x) + (lineEq.y*firstLineEq.y), 1)) * 180/ CV_PI;
                 if (std::min(angle, 180-angle) > maxAngle)
                 {
                     maxAngle = std::min(angle, 180-angle);
@@ -110,7 +96,7 @@ using namespace cv::separableFundamentalMatrix;
         }
 
         vector<top_line> getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
-            const vector<line_info> &lineInfosImg2, int minSharedPoints, float inlierRatio)
+            const vector<line_info> &lineInfosImg2, int minSharedPoints, double inlierRatio)
         {
 
             // Create a heatmap between points of each line
@@ -164,8 +150,8 @@ using namespace cv::separableFundamentalMatrix;
                     intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
                         lineInfosImg2[j].matching_indexes.begin(), lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
 
-                    vector<Point2f> matchingPoints1 = projectPointsOnLineByInices(_ptsImg1, lineInfosImg1[k], arr_idx);
-                    vector<Point2f> matchingPoints2 = projectPointsOnLineByInices(_ptsImg2, lineInfosImg2[j], arr_idx);
+                    vector<Point2d> matchingPoints1 = projectPointsOnLineByInices<double>(_ptsImg1, lineInfosImg1[k], arr_idx);
+                    vector<Point2d> matchingPoints2 = projectPointsOnLineByInices<double>(_ptsImg2, lineInfosImg2[j], arr_idx);
 
                     vector<int> uniqueIdx = uniqueIntersectedPoints(matchingPoints1, matchingPoints2);
 
@@ -174,18 +160,18 @@ using namespace cv::separableFundamentalMatrix;
                         continue;
 
                     // Filter
-                    matchingPoints1 = byIndices<float>(matchingPoints1, uniqueIdx);
-                    matchingPoints2 = byIndices<float>(matchingPoints2, uniqueIdx);
+                    matchingPoints1 = byIndices<double>(matchingPoints1, uniqueIdx);
+                    matchingPoints2 = byIndices<double>(matchingPoints2, uniqueIdx);
 
                     // Find inliers, inlier_idx_homography - index of inliers of all the line points
-                    auto matchingPoints = VecMatchingPoints<float>(matchingPoints1, matchingPoints2);
+                    auto matchingPoints = VecMatchingPoints<double>(matchingPoints1, matchingPoints2);
                     auto lineInliersResult = lineInliersRansac(num_line_ransac_iterations, matchingPoints);
 
                     if (lineInliersResult.inlierIndexes.size() < 4)
                         continue;
 
-                    auto inlierPoints1 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
-                    auto inlierPoints2 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
+                    auto inlierPoints1 = byIndices<double>(matchingPoints1, lineInliersResult.inlierIndexes);
+                    auto inlierPoints2 = byIndices<double>(matchingPoints1, lineInliersResult.inlierIndexes);
                 
                     auto endpoints = intervalEndpoints(inlierPoints1);
                     auto median = intervalMedian(inlierPoints1, endpoints.firstIdx, endpoints.secondIdx);
@@ -197,8 +183,8 @@ using namespace cv::separableFundamentalMatrix;
                     curr.line1_index = k;
                     curr.line2_index = j;
                     curr.inlier_selected_index = { endpoints.firstIdx, endpoints.secondIdx, median.medianIdx };
-                    curr.selected_line_points1 = byIndices<float>(inlierPoints1, curr.inlier_selected_index);
-                    curr.selected_line_points2 = byIndices<float>(inlierPoints2, curr.inlier_selected_index);
+                    curr.selected_line_points1 = byIndices<double>(inlierPoints1, curr.inlier_selected_index);
+                    curr.selected_line_points2 = byIndices<double>(inlierPoints2, curr.inlier_selected_index);
                     curr.max_dist = endpoints.distance;
                     curr.min_dist = median.minDistance;
                     curr.homg_err = lineInliersResult.meanError;
@@ -219,16 +205,17 @@ using namespace cv::separableFundamentalMatrix;
             //return {};
         }
 
-        vector<float> findIntersectionPoints(float rho, float theta, const int im_size_w, const int im_size_h)
+        template <typename _Tp>
+        vector<_Tp> findIntersectionPoints(_Tp rho, _Tp theta, const int im_size_w, const int im_size_h)
         {
-            float a = cos(theta);
-            float b = sin(theta);
-            float x_0 = a != 0 ? rho / a : -1000;
-            float x_1 = a != 0 ? (rho - (b * im_size_w)) / a : -1000;
-            float y_0 = b != 0 ? rho / b : -1000;
-            float y_1 = b != 0 ? (rho - (a * im_size_h)) / b : -1000;
+            _Tp a = cos(theta);
+            _Tp b = sin(theta);
+            _Tp x_0 = a != 0 ? rho / a : -1000;
+            _Tp x_1 = a != 0 ? (rho - (b * im_size_w)) / a : -1000;
+            _Tp y_0 = b != 0 ? rho / b : -1000;
+            _Tp y_1 = b != 0 ? (rho - (a * im_size_h)) / b : -1000;
 
-            vector<float> ret;
+            vector<_Tp> ret;
             if (x_0 >= 0 && x_0 < im_size_h)
             {
                 ret.push_back(x_0);
@@ -242,24 +229,25 @@ using namespace cv::separableFundamentalMatrix;
             if (x_1 >= 0 && x_1 < im_size_h)
             {
                 ret.push_back(x_1);
-                ret.push_back(float(im_size_w));
+                ret.push_back(_Tp(im_size_w));
             }
             if (y_1 >= 0 && y_1 < im_size_w)
             {
-                ret.push_back(float(im_size_h));
+                ret.push_back(_Tp(im_size_h));
                 ret.push_back(y_1);
             }
 
             return ret;
         }
 
-        line_info createLineInfo(Mat pts, const vector<float> &points_intersection, float max_distance, int line_index)
+        template <typename _Tp>
+        line_info createLineInfo(Mat pts, const vector<_Tp> &points_intersection, _Tp max_distance, int line_index)
         {
             CV_Assert(points_intersection.size() == 4);
 
-            Point3f pt1(points_intersection[0], points_intersection[1], 1);
-            Point3f pt2(points_intersection[2], points_intersection[3], 1);
-            Point3f line_eq = pt1.cross(pt2);
+            Point3_<_Tp> pt1(points_intersection[0], points_intersection[1], 1);
+            Point3_<_Tp> pt2(points_intersection[2], points_intersection[3], 1);
+            Point3_<_Tp> line_eq = pt1.cross(pt2);
 
             if (abs(line_eq.z) >= FLT_EPSILON)
             {
@@ -269,11 +257,11 @@ using namespace cv::separableFundamentalMatrix;
             // too small to divide, solve with least square
             else
             {
-                float a[4] = { points_intersection[0],1,
+                _Tp a[4] = { points_intersection[0],1,
                                points_intersection[2],1 };
                 Mat A(2, 2, CV_8U, &a);
-                vector<float> B{ points_intersection[1], points_intersection[2] };
-                vector<float> x;
+                vector<_Tp> B{ points_intersection[1], points_intersection[2] };
+                vector<_Tp> x;
                 solve(A, B, x);
                 line_eq.x = x[0];
                 line_eq.y = -1;
@@ -282,9 +270,9 @@ using namespace cv::separableFundamentalMatrix;
 
             vector<int> matching_indexes;
             {
-                float scale = sqrtf((line_eq.x * line_eq.x) + (line_eq.y * line_eq.y));
-                vector<float> d = MatrixVectorMul(pts, line_eq, 1.f / scale, true);
-                matching_indexes = index_if(d.begin(), d.end(), [&](float f) {return f < max_distance; });
+                _Tp scale = sqrt((line_eq.x * line_eq.x) + (line_eq.y * line_eq.y));
+                auto d = MatrixVectorMul<_Tp>(pts, line_eq, 1.f / scale, true);
+                matching_indexes = index_if(d.begin(), d.end(), [&](_Tp f) {return f < max_distance; });
             }
 
             auto lineEqNormDivider = sqrt(pow(line_eq.x, 2) + pow(line_eq.y, 2)) + FLT_EPSILON;
@@ -293,15 +281,15 @@ using namespace cv::separableFundamentalMatrix;
             ret.matching_indexes = matching_indexes;
             ret.line_eq_abc = line_eq;
             ret.line_eq_abc_norm = line_eq / lineEqNormDivider;
-            ret.bottom_left_edge_point = Point2f(points_intersection[0], points_intersection[1]);
-            ret.top_right_edge_point = Point2f(points_intersection[2], points_intersection[3]);
+            ret.bottom_left_edge_point = Point2d(points_intersection[0], points_intersection[1]);
+            ret.top_right_edge_point = Point2d(points_intersection[2], points_intersection[3]);
             ret.max_distance = max_distance;
             ret.line_index = line_index;
             return ret;
         }
 
         vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
-            int pixel_res, int theta_res, float max_distance, int num_matching_pts_to_use)
+            int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use)
         {
             Mat ptsRounded = pts.clone();
             ptsRounded.convertTo(ptsRounded, CV_32S);
@@ -321,7 +309,7 @@ using namespace cv::separableFundamentalMatrix;
             int lineIndex = 0;
             for (auto l : houghLines)
             {
-                float rho = l[0], theta = l[1];
+                double rho = l[0], theta = l[1];
                 auto p_intersect = findIntersectionPoints(rho, theta, im_size_w, im_size_h);
                 if (p_intersect.size() == 4)
                 {

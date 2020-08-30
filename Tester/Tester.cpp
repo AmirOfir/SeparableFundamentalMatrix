@@ -46,20 +46,20 @@ string shape(const cv::Mat &mat)
     return stream.str();
 }
 
-vector<vector<float>> parseCSV(string csv_name)
+vector<vector<double>> parseCSV(string csv_name)
 {
     ifstream data(csv_name);
     string line;
     std::string::size_type sz;
-    vector<vector<float>> parsedCsv;
+    vector<vector<double>> parsedCsv;
     while(std::getline(data,line))
     {
         stringstream lineStream(line);
         string cell;
-        vector<float> parsedRow;
+        vector<double> parsedRow;
         while(std::getline(lineStream,cell,','))
         {
-            parsedRow.push_back(stof(cell, &sz));
+            parsedRow.push_back(stod(cell, &sz));
         }
 
         parsedCsv.push_back(parsedRow);
@@ -79,16 +79,16 @@ Mat convertVectorOfVectorsToMat(const vector<vector<RealType>> &vec, int chs = 1
 }
 
 template <typename RealType>
-vector<Point2f> convertToVectorOfPoints(const vector<vector<RealType>> &vec, int chs = 1)
+vector<Point2d> convertToVectorOfPoints(const vector<vector<RealType>> &vec, int chs = 1)
 {
-    vector<Point2f> ret;
+    vector<Point2d> ret;
     for (auto c : vec)
-        ret.push_back(Point2f(c.at(0), c.at(1)));
+        ret.push_back(Point2d(c.at(0), c.at(1)));
     return ret;
 }
  
 void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string imgB_pts_name, float scale_factor, 
-    Mat &img1, Mat &img2, vector<vector<float>> &ptsA, vector<vector<float>> &ptsB)
+    Mat &img1, Mat &img2, vector<vector<double>> &ptsA, vector<vector<double>> &ptsB)
 {
     auto img1c = imread(img1_name); // queryImage
     auto img2c = imread(img2_name); // trainImage
@@ -153,7 +153,7 @@ int main()
     for (auto file_tuple : example_files)
     {
         Mat imgA, imgB;
-        vector<vector<float>> ptsA, ptsB;
+        vector<vector<double>> ptsA, ptsB;
 
         LoadImages(get<0>(file_tuple), get<1>(file_tuple), get<2>(file_tuple), get<3>(file_tuple), get<4>(file_tuple), imgA, imgB, ptsA, ptsB);
 
@@ -163,7 +163,7 @@ int main()
         auto ptsAVec = convertToVectorOfPoints(ptsA);
         auto ptsBVec = convertToVectorOfPoints(ptsB);
         Mat mask;
-        Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_8POINT);
+        //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_8POINT);
         cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
 
         ShowImage(imgA);

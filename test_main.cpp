@@ -79,11 +79,11 @@ Mat convertVectorOfVectorsToMat(const vector<vector<RealType>> &vec, int chs = 1
 }
 
 template <typename RealType>
-vector<Point2f> convertToVectorOfPoints(const vector<vector<RealType>> &vec, int chs = 1)
+vector<Point2d> convertToVectorOfPoints(const vector<vector<RealType>> &vec, int chs = 1)
 {
-    vector<Point2f> ret;
+    vector<Point2d> ret;
     for (auto c : vec)
-        ret.push_back(Point2f(c.at(0), c.at(1)));
+        ret.push_back(Point2d(c.at(0), c.at(1)));
     return ret;
 }
  

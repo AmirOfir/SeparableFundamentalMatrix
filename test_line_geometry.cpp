@@ -6,7 +6,7 @@ using namespace cv::separableFundamentalMatrix;
 
 void test_intervalEndpoints()
 {
-    vector<Point2f> vec
+    vector<Point2d> vec
     {
        Point2d(1308.0230798 ,  607.18846997),
        Point2d(1322.13497292,  620.34802247),
@@ -25,7 +25,7 @@ void test_intervalEndpoints()
 
 void test_intervalMedian()
 {
-    vector<Point2f> vec
+    vector<Point2d> vec
     {
        Point2d(1308.0230798 ,  607.18846997),
        Point2d(1322.13497292,  620.34802247),

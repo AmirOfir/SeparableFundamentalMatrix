@@ -69,11 +69,11 @@ namespace cv
         struct line_info
         {
             vector<int> matching_indexes;
-            Point3f line_eq_abc;
-            Point3f line_eq_abc_norm;
-            Point2f bottom_left_edge_point;
-            Point2f top_right_edge_point;
-            float max_distance;
+            Point3d line_eq_abc;
+            Point3d line_eq_abc_norm;
+            Point2d bottom_left_edge_point;
+            Point2d top_right_edge_point;
+            double max_distance;
             int line_index;
         };
 
@@ -90,16 +90,16 @@ namespace cv
             }
         public:
             int num_inliers;
-            vector<Point2f> line_points_1;
-            vector<Point2f> line_points_2;
+            vector<Point2d> line_points_1;
+            vector<Point2d> line_points_2;
             int line1_index;
             int line2_index;
             vector<int> inlier_selected_index;
-            vector<Point2f> selected_line_points1;
-            vector<Point2f> selected_line_points2;
-            float max_dist;
-            float min_dist;
-            float homg_err;
+            vector<Point2d> selected_line_points1;
+            vector<Point2d> selected_line_points2;
+            double max_dist;
+            double min_dist;
+            double homg_err;
         };
 
         class SFMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback

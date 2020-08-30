@@ -205,7 +205,7 @@ namespace cv { namespace separableFundamentalMatrix
         
         vector<Point_<_Tp>> ret;
         for (auto index : indices)
-            ret.push_back(Point_<_Tp>(mat.at<float>(index, 0), mat.at<float>(index, 1)));
+            ret.push_back(Point_<_Tp>(mat.at<_Tp>(index, 0), mat.at<_Tp>(index, 1)));
         return ret;
     }
 
@@ -329,6 +329,24 @@ namespace cv { namespace separableFundamentalMatrix
 
         return ret;
         */
+    }
+
+
+    // Helper - Multiply matrix with vector
+    template <typename _Tp>
+    vector<_Tp> MatrixVectorMul(Mat mat2d, Point3_<_Tp> vec, _Tp scale = 1, bool absolute = false)
+    {
+        vector<_Tp> ret;
+        ret.reserve(mat2d.size().height);
+
+        for (size_t i = 0; i < mat2d.size().height; i++)
+        {
+            _Tp curr = (vec.x * mat2d.at<_Tp>(i, 0)) + (vec.y * mat2d.at<_Tp>(i, 1)) + vec.z;
+            if (absolute)
+                curr = abs(curr);
+            ret.push_back(curr * scale);
+        }
+        return ret;
     }
     
     

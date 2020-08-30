@@ -88,8 +88,10 @@ void test_lineHomographyError()
        1.03963197e+01
     };
     
-
-    assert_same(result, expected);
+    for (size_t i = 0; i < result.size(); i++)
+    {
+        assert(abs(expectedData[i] - result[i]) < 0.001);
+    }
 }
 
 void test_normalizeCoordinatesByLastCol()

@@ -109,8 +109,7 @@ void test_byIndices()
     TestGen testGen;
     Mat m = testGen.genMat();
     vector<int> indices = testGen.genNumbers();
-    vector<Point2f> result =
-    byIndices<float>(m, indices);
+    vector<Point2d> result = byIndices<double>(m, indices);
 }
 
 void test_matrixVectorElementwiseMultiplication()
