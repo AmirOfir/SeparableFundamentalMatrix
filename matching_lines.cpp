@@ -1,12 +1,12 @@
-#include "matching_lines.hpp"
+#include "SFM_finder.hpp"
 #include "np_cv_imp.hpp"
 #include "line_geometry.hpp"
 //#include <opencv2/features2d.hpp>
 
 using namespace cv;
 using namespace std;
-namespace cv {
-    namespace separableFundamentalMatrix {
+using namespace cv::separableFundamentalMatrix;
+
         
         // Helper - Multiply matrix with vector
         vector<float> MatrixVectorMul(Mat mat2d, Point3f vec, float scale = 1, bool absolute = false)
@@ -147,62 +147,69 @@ namespace cv {
             // project the shared points to be exactly on the line
             // start with the lines that shared the highest number of points, so we can do top-N
             // return a list index by the lines (k,j) with the projected points themself
-            int num_line_ransac_iterations = int((log(0.01) / log(1 - pow(inlierRatio, 3)))) + 1;
+            int num_line_ransac_iterations = int((log(0.01) / log(1 - pow(inlierRatio, 5)))) + 1;
             
             vector<top_line> topLines;
+            std::mutex mtx;
 
             // Go over the top lines with the most number of shared points, project the points, store by the matching indices of the pair of lines
             int num_sorted_lines = min((int)num_shared_points_vote.size(), 50);
-            for (size_t n = 0; n < num_sorted_lines; n++)
-            {
-                int k = num_shared_points_vote[n].y;
-                int j = num_shared_points_vote[n].z;
+            parallel_for_(Range(0, num_sorted_lines), [&](const Range& range) {
+                for (size_t n = range.start; n < range.end; n++)
+                {
+                    int k = num_shared_points_vote[n].y;
+                    int j = num_shared_points_vote[n].z;
 
-                vector<int> arr_idx;
-                intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
-                    lineInfosImg2[j].matching_indexes.begin(), lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
+                    vector<int> arr_idx;
+                    intersect1d(lineInfosImg1[k].matching_indexes.begin(), lineInfosImg1[k].matching_indexes.end(), 
+                        lineInfosImg2[j].matching_indexes.begin(), lineInfosImg2[j].matching_indexes.end(), back_inserter(arr_idx));
 
-                vector<Point2f> matchingPoints1 = projectPointsOnLineByInices(_ptsImg1, lineInfosImg1[k], arr_idx);
-                vector<Point2f> matchingPoints2 = projectPointsOnLineByInices(_ptsImg2, lineInfosImg2[j], arr_idx);
+                    vector<Point2f> matchingPoints1 = projectPointsOnLineByInices(_ptsImg1, lineInfosImg1[k], arr_idx);
+                    vector<Point2f> matchingPoints2 = projectPointsOnLineByInices(_ptsImg2, lineInfosImg2[j], arr_idx);
 
-                vector<int> uniqueIdx = uniqueIntersectedPoints(matchingPoints1, matchingPoints2);
+                    vector<int> uniqueIdx = uniqueIntersectedPoints(matchingPoints1, matchingPoints2);
 
-                // We need at least four unique points
-                if (uniqueIdx.size() < 4)
-                    continue;
+                    // We need at least four unique points
+                    if (uniqueIdx.size() < 4)
+                        continue;
 
-                // Filter
-                matchingPoints1 = byIndices<float>(matchingPoints1, uniqueIdx);
-                matchingPoints2 = byIndices<float>(matchingPoints2, uniqueIdx);
+                    // Filter
+                    matchingPoints1 = byIndices<float>(matchingPoints1, uniqueIdx);
+                    matchingPoints2 = byIndices<float>(matchingPoints2, uniqueIdx);
 
-                // Find inliers, inlier_idx_homography - index of inliers of all the line points
-                auto matchingPoints = VecMatchingPoints<float>(matchingPoints1, matchingPoints2);
-                auto lineInliersResult = lineInliersRansac(num_line_ransac_iterations, matchingPoints);
+                    // Find inliers, inlier_idx_homography - index of inliers of all the line points
+                    auto matchingPoints = VecMatchingPoints<float>(matchingPoints1, matchingPoints2);
+                    auto lineInliersResult = lineInliersRansac(num_line_ransac_iterations, matchingPoints);
 
-                if (lineInliersResult.inlierIndexes.size() < 4)
-                    continue;
+                    if (lineInliersResult.inlierIndexes.size() < 4)
+                        continue;
 
-                auto inlierPoints1 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
-                auto inlierPoints2 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
+                    auto inlierPoints1 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
+                    auto inlierPoints2 = byIndices<float>(matchingPoints1, lineInliersResult.inlierIndexes);
                 
-                auto endpoints = intervalEndpoints(inlierPoints1);
-                auto median = intervalMedian(inlierPoints1, endpoints.firstIdx, endpoints.secondIdx);
+                    auto endpoints = intervalEndpoints(inlierPoints1);
+                    auto median = intervalMedian(inlierPoints1, endpoints.firstIdx, endpoints.secondIdx);
                 
-                top_line curr;
-                curr.num_inliers = (int)lineInliersResult.inlierIndexes.size();
-                curr.line_points_1 = inlierPoints1;
-                curr.line_points_2 = inlierPoints2;
-                curr.line1_index = k;
-                curr.line2_index = j;
-                curr.inlier_selected_index = { endpoints.firstIdx, endpoints.secondIdx, median.medianIdx };
-                curr.selected_line_points1 = byIndices<float>(inlierPoints1, curr.inlier_selected_index);
-                curr.selected_line_points2 = byIndices<float>(inlierPoints2, curr.inlier_selected_index);
-                curr.max_dist = endpoints.distance;
-                curr.min_dist = median.minDistance;
-                curr.homg_err = lineInliersResult.meanError;
-                topLines.push_back(curr);
+                    top_line curr;
+                    curr.num_inliers = (int)lineInliersResult.inlierIndexes.size();
+                    curr.line_points_1 = inlierPoints1;
+                    curr.line_points_2 = inlierPoints2;
+                    curr.line1_index = k;
+                    curr.line2_index = j;
+                    curr.inlier_selected_index = { endpoints.firstIdx, endpoints.secondIdx, median.medianIdx };
+                    curr.selected_line_points1 = byIndices<float>(inlierPoints1, curr.inlier_selected_index);
+                    curr.selected_line_points2 = byIndices<float>(inlierPoints2, curr.inlier_selected_index);
+                    curr.max_dist = endpoints.distance;
+                    curr.min_dist = median.minDistance;
+                    curr.homg_err = lineInliersResult.meanError;
 
-            }
+                    mtx.lock();
+                    topLines.push_back(curr);
+                    mtx.unlock();
+
+                }
+            });
+            
             
             if (topLines.size() < 2)
                 return {};
@@ -326,7 +333,8 @@ namespace cv {
             return lineInfos;
         }
 
-        vector<top_line> cv::separableFundamentalMatrix::FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
+        vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines(
+            const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
             const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
             int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio)
         {
@@ -360,6 +368,3 @@ namespace cv {
 
             return topMatchingLines;
         }
-
-    }
-}

@@ -163,7 +163,7 @@ int main()
         auto ptsAVec = convertToVectorOfPoints(ptsA);
         auto ptsBVec = convertToVectorOfPoints(ptsB);
         Mat mask;
-        //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat);
+        Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_8POINT);
         cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
 
         ShowImage(imgA);

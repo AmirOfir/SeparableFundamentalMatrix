@@ -83,6 +83,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>E:\Source\opencv_install\include;..\;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Source\opencv_install\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -136,7 +138,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -151,7 +153,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opencv_aruco440d.lib;opencv_bgsegm440d.lib;opencv_bioinspired440d.lib;opencv_calib3d440d.lib;opencv_ccalib440d.lib;opencv_core440d.lib;opencv_datasets440d.lib;opencv_dnn440d.lib;opencv_dnn_objdetect440d.lib;opencv_dnn_superres440d.lib;opencv_dpm440d.lib;opencv_face440d.lib;opencv_features2d440d.lib;opencv_flann440d.lib;opencv_fuzzy440d.lib;opencv_gapi440d.lib;opencv_hfs440d.lib;opencv_highgui440d.lib;opencv_imgcodecs440d.lib;opencv_imgproc440d.lib;opencv_img_hash440d.lib;opencv_intensity_transform440d.lib;opencv_line_descriptor440d.lib;opencv_ml440d.lib;opencv_objdetect440d.lib;opencv_optflow440d.lib;opencv_phase_unwrapping440d.lib;opencv_photo440d.lib;opencv_plot440d.lib;opencv_quality440d.lib;opencv_rapid440d.lib;opencv_reg440d.lib;opencv_rgbd440d.lib;opencv_saliency440d.lib;opencv_shape440d.lib;opencv_stereo440d.lib;opencv_stitching440d.lib;opencv_structured_light440d.lib;opencv_superres440d.lib;opencv_surface_matching440d.lib;opencv_text440d.lib;opencv_tracking440d.lib;opencv_video440d.lib;opencv_videoio440d.lib;opencv_videostab440d.lib;opencv_xfeatures2d440d.lib;opencv_ximgproc440d.lib;opencv_xobjdetect440d.lib;opencv_xphoto440d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)x64\Release\SeparableFundamentalMatrix.lib;opencv_aruco440d.lib;opencv_bgsegm440d.lib;opencv_bioinspired440d.lib;opencv_calib3d440d.lib;opencv_ccalib440d.lib;opencv_core440d.lib;opencv_datasets440d.lib;opencv_dnn440d.lib;opencv_dnn_objdetect440d.lib;opencv_dnn_superres440d.lib;opencv_dpm440d.lib;opencv_face440d.lib;opencv_features2d440d.lib;opencv_flann440d.lib;opencv_fuzzy440d.lib;opencv_gapi440d.lib;opencv_hfs440d.lib;opencv_highgui440d.lib;opencv_imgcodecs440d.lib;opencv_imgproc440d.lib;opencv_img_hash440d.lib;opencv_intensity_transform440d.lib;opencv_line_descriptor440d.lib;opencv_ml440d.lib;opencv_objdetect440d.lib;opencv_optflow440d.lib;opencv_phase_unwrapping440d.lib;opencv_photo440d.lib;opencv_plot440d.lib;opencv_quality440d.lib;opencv_rapid440d.lib;opencv_reg440d.lib;opencv_rgbd440d.lib;opencv_saliency440d.lib;opencv_shape440d.lib;opencv_stereo440d.lib;opencv_stitching440d.lib;opencv_structured_light440d.lib;opencv_superres440d.lib;opencv_surface_matching440d.lib;opencv_text440d.lib;opencv_tracking440d.lib;opencv_video440d.lib;opencv_videoio440d.lib;opencv_videostab440d.lib;opencv_xfeatures2d440d.lib;opencv_ximgproc440d.lib;opencv_xobjdetect440d.lib;opencv_xphoto440d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
