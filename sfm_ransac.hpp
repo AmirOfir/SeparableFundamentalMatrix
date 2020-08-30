@@ -8,29 +8,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d/calib3d_c.h>
 #include "SFM_finder.hpp"
-
-namespace cv
-{
-    class CV_EXPORTS PointSetRegistrator : public Algorithm
-    {
-    public:
-        class CV_EXPORTS Callback
-        {
-        public:
-            virtual ~Callback() {}
-            virtual int runKernel(InputArray m1, InputArray m2, OutputArray model) const = 0;
-            virtual void computeError(InputArray m1, InputArray m2, InputArray model, OutputArray err) const = 0;
-            virtual bool checkSubset(InputArray, InputArray, int) const { return true; }
-        };
-
-        virtual void setCallback(const Ptr<PointSetRegistrator::Callback>& cb) = 0;
-        virtual bool run(InputArray m1, InputArray m2, OutputArray model, OutputArray mask) const = 0;
-    };
-
-    Ptr<PointSetRegistrator> createRANSACPointSetRegistrator(const Ptr<PointSetRegistrator::Callback>& _cb,
-        int _modelPoints, double _threshold=0, double _confidence=0.99, int _maxIters=1000);
-
-}
+#include "pointset_registrator.hpp"
 
 namespace cv
 {

@@ -132,6 +132,7 @@
     <ClInclude Include="matching_points.hpp" />
     <ClInclude Include="matching_lines.hpp" />
     <ClInclude Include="np_cv_imp.hpp" />
+    <ClInclude Include="pointset_registrator.hpp" />
     <ClInclude Include="SFM_finder.hpp" />
     <ClInclude Include="sfm_ransac.hpp" />
     <ClInclude Include="test_precomp.hpp" />

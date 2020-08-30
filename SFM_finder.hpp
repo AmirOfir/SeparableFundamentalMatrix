@@ -50,6 +50,7 @@ the use of this software, even if advised of the possibility of such damage.
 #include "np_cv_imp.hpp"
 #include "matching_points.hpp"
 #include "line_homography.hpp"
+#include "pointset_registrator.hpp"
 
 using namespace cv;
 using namespace std;
@@ -99,6 +100,23 @@ namespace cv
             float max_dist;
             float min_dist;
             float homg_err;
+        };
+
+        class SFMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback
+        {
+            private:
+            Mat fixed1;
+            Mat fixed2;
+        public:
+            ~SFMEstimatorCallback()
+            {
+                fixed1.release();
+                fixed2.release();
+            }
+            void setFixedMatrices(InputArray _m1, InputArray _m2);
+            bool checkSubset(InputArray _ms1, InputArray _ms2, int count) const CV_OVERRIDE;
+            int runKernel(InputArray _m1, InputArray _m2, OutputArray _model) const CV_OVERRIDE;
+            void computeError(InputArray _m1, InputArray _m2, InputArray _model, OutputArray _err) const CV_OVERRIDE;
         };
 
         class SeparableFundamentalMatFindCommand
