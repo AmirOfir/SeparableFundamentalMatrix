@@ -8,7 +8,6 @@ using namespace cv::separableFundamentalMatrix;
 template <typename _Tp>
 void assert_same(Mat a, Mat b)
 {
-    double minval, maxval;
     Mat diff = (a - b);
     diff = cv::abs(diff);
     for (int row = 0; row < diff.rows; row++)
@@ -61,7 +60,7 @@ TEST(TestSFMEstimatorCallback, CalculatesFundamentalMatrixPureOpenCV2d)
 
 }
 
-TEST(TestSFMEstimatorCallback, CalculatesFundamentalMatrixPureOpenCV)
+TEST(TestSFMEstimatorCallback, CalculatesFundamentalMatrixPureOpenCV3d)
 {
     double data[] = { -5.42591269e-06,  3.79209754e-05, -9.86489188e-02,
        -2.99228592e-05, -5.35287692e-06,  8.16081142e-02,
@@ -167,4 +166,96 @@ TEST(TestSFMEstimatorCallback, CalculatesFundamentalMatrix)
 
     assert_same<double>(model, expected);
 
+}
+
+TEST(TestSFMEstimatorCallback, CalculatesFundamentalMatrix2)
+{
+    vector<Point2d> pointsL = {
+        Point2d(6.53061646e+02, 9.07054993e+02  ),
+        Point2d(3.93640442e+02, 6.04780334e+02  ),
+        Point2d(5.27386780e+02, 7.41797363e+02  ),
+        Point2d(7.25550476e+02, 3.15516724e+02  ),
+        Point2d(1.21212366e+03, 5.87335327e+02)
+    };
+    vector<Point2d> pointsR = {
+        Point2d(3.73052551e+02, 4.70658569e+02),
+        Point2d(1.90753128e+02, 2.76573181e+02),
+        Point2d(2.77985168e+02, 3.56134644e+02),
+        Point2d(9.10476990e+02, 1.95234711e+02),
+        Point2d(8.20373901e+02, 2.91974823e+02)
+    };
+    Mat m1(pointsL), m2(pointsR);
+
+    vector<Point2d> fixedPointL = {
+        Point2d(4.47340762e+02, 7.41009944e+02),
+        Point2d(1.27719872e+03, 7.99039284e+02),
+        Point2d(6.94567659e+02, 7.58297739e+02)
+    };
+    vector<Point2d> fixedPointR = {
+        Point2d(2.17158396e+02, 3.56653013e+02),
+        Point2d(8.74205341e+02, 4.25711462e+02),
+        Point2d(4.21864342e+02, 3.78168485e+02)
+    };
+    Mat f1(fixedPointL), f2(fixedPointR);
+    
+    SFMEstimatorCallback sfm;
+    sfm.setFixedMatrices(f1, f2);
+
+    Mat model;// (3, 3, CV_64F);
+    sfm.runKernel(m1, m2, model);
+
+    double data[] = { 
+        -2.49008112e-06, -3.07230209e-05,  4.10604254e-03,
+        4.47674168e-05, -1.10741817e-05,  1.35762501e-02,
+       -4.99530539e-04, -7.29981879e-03,  1.00000000e+00 };
+    Mat expected(3, 3, CV_64F, data);
+
+    assert_same<double>(model, expected);
+}
+
+TEST(TestSFMEstimatorCallback, FindInliers)
+{
+    double modelData[] = { 
+        -2.49008112e-06, -3.07230209e-05,  4.10604254e-03,
+        4.47674168e-05, -1.10741817e-05,  1.35762501e-02,
+       -4.99530539e-04, -7.29981879e-03,  1.00000000e+00 };
+    Mat model(3, 3, CV_64F, modelData);
+
+    vector<Point2d> pointsL = {
+        Point2d(6.53061646e+02, 9.07054993e+02  ),
+        Point2d(3.93640442e+02, 6.04780334e+02  ),
+        Point2d(5.27386780e+02, 7.41797363e+02  ),
+        Point2d(7.25550476e+02, 3.15516724e+02  ),
+        Point2d(1.21212366e+03, 5.87335327e+02)
+    };
+    vector<Point2d> pointsR = {
+        Point2d(3.73052551e+02, 4.70658569e+02),
+        Point2d(1.90753128e+02, 2.76573181e+02),
+        Point2d(2.77985168e+02, 3.56134644e+02),
+        Point2d(9.10476990e+02, 1.95234711e+02),
+        Point2d(8.20373901e+02, 2.91974823e+02)
+    };
+    Mat m1(pointsL), m2(pointsR);
+
+    vector<Point2d> fixedPointL = {
+        Point2d(4.47340762e+02, 7.41009944e+02),
+        Point2d(1.27719872e+03, 7.99039284e+02),
+        Point2d(6.94567659e+02, 7.58297739e+02)
+    };
+    vector<Point2d> fixedPointR = {
+        Point2d(2.17158396e+02, 3.56653013e+02),
+        Point2d(8.74205341e+02, 4.25711462e+02),
+        Point2d(4.21864342e+02, 3.78168485e+02)
+    };
+    Mat f1(fixedPointL), f2(fixedPointR);
+
+    SFMEstimatorCallback sfm;
+
+    Mat err;
+    sfm.computeError(m1, m2, model, err);
+
+    float errExpectedData[] = { 0.10464236, 9.21043061, 2.76470398, 2.18282727, 2.22311052 };
+    Mat expected(5, 1, CV_32F, errExpectedData);
+
+    assert_same<float>(err, expected);
 }

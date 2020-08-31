@@ -48,42 +48,51 @@ int SFMEstimatorCallback::runKernel( InputArray _m1, InputArray _m2, OutputArray
 
     Mat F = cv::findFundamentalMat(m1, m2, FM_8POINT);
     
-    F.copyTo(_model);
+    if (!F.empty() && F.data[0] != NULL)
+    {
+        if( _model.empty() )
+            _model.create(3, 3, CV_64F);
+        
+        F.convertTo(_model, F.type());
+        return true;
+    }
 
-    return F.empty() ? 0 : 1;
+    return false;
 }
 
 void SFMEstimatorCallback::computeError( InputArray _m1, InputArray _m2, InputArray _model, OutputArray _err ) const
+{
+    Mat __m1 = _m1.getMat(), __m2 = _m2.getMat(), __model = _model.getMat();
+    int i, count = __m1.checkVector(2);
+    _err.create(count, 1, CV_32F);
+    float* err = _err.getMat().ptr<float>();
+    
+    const Point2d* m1 = __m1.ptr<Point2d>();
+    const Point2d* m2 = __m2.ptr<Point2d>();
+    const double* F = __model.ptr<double>();
+    
+    for( i = 0; i < count; i++ )
     {
-        Mat __m1 = _m1.getMat(), __m2 = _m2.getMat(), __model = _model.getMat();
-        int i, count = __m1.checkVector(2);
-        const Point2d* m1 = __m1.ptr<Point2d>();
-        const Point2d* m2 = __m2.ptr<Point2d>();
-        const double* F = __model.ptr<double>();
-        _err.create(count, 1, CV_32F);
-        float* err = _err.getMat().ptr<float>();
+        double a, b, c, d1, d2, s1, s2;
 
-        for( i = 0; i < count; i++ )
-        {
-            double a, b, c, d1, d2, s1, s2;
+        a = F[0]*m1[i].x + F[1]*m1[i].y + F[2];
+        b = F[3]*m1[i].x + F[4]*m1[i].y + F[5];
+        c = F[6]*m1[i].x + F[7]*m1[i].y + F[8];
 
-            a = F[0]*m1[i].x + F[1]*m1[i].y + F[2];
-            b = F[3]*m1[i].x + F[4]*m1[i].y + F[5];
-            c = F[6]*m1[i].x + F[7]*m1[i].y + F[8];
+        s2 = 1./(a*a + b*b);
+        d2 = m2[i].x*a + m2[i].y*b + c;
 
-            s2 = 1./(a*a + b*b);
-            d2 = m2[i].x*a + m2[i].y*b + c;
+        a = F[0]*m2[i].x + F[3]*m2[i].y + F[6];
+        b = F[1]*m2[i].x + F[4]*m2[i].y + F[7];
+        c = F[2]*m2[i].x + F[5]*m2[i].y + F[8];
 
-            a = F[0]*m2[i].x + F[3]*m2[i].y + F[6];
-            b = F[1]*m2[i].x + F[4]*m2[i].y + F[7];
-            c = F[2]*m2[i].x + F[5]*m2[i].y + F[8];
+        s1 = 1./(a*a + b*b);
+        d1 = m1[i].x*a + m1[i].y*b + c;
 
-            s1 = 1./(a*a + b*b);
-            d1 = m1[i].x*a + m1[i].y*b + c;
-
-            err[i] = (float)std::max(d1*d1*s1, d2*d2*s2);
-        }
+        err[i] =(float) 0.5 * (sqrt(d1*d1*s1) + sqrt(d2*d2*s2));
+        //err[i] = (double)std::max(d1*d1*s1, d2*d2*s2);
     }
+}
   
 
 SeparableFundamentalMatFindCommand::SeparableFundamentalMatFindCommand(InputArray _points1, InputArray _points2, int _imSizeHOrg, 
