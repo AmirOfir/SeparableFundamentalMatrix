@@ -36,6 +36,6 @@ void test_intervalMedian()
        Point2d(1209.51181494,  515.32523442)
     };
 
-    auto result = intervalMedian(vec, 4, 6);
+    auto result = intervalPointClosestToCenter(vec, 4, 6);
     CV_Assert(result.minDistance - 132.47381225 < 0.0001);
 }
