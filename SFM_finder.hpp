@@ -89,6 +89,7 @@ namespace cv
                 homg_err = o.homg_err;
             }
         public:
+            bool empty() { return num_inliers == 0; }
             int num_inliers;
             vector<Point2d> line_points_1;
             vector<Point2d> line_points_2;
