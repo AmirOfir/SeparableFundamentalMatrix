@@ -81,10 +81,10 @@ array<top_line,2> topTwoLinesWithMaxAngle(const vector<line_info> &lineInfosImg1
     int lineCount = min(20, (int)topLines.size());
     double maxAngle = -180;
     int maxAngleIx;
-    for (int i = 1; i < lineCount; i++)
+    for (int i = 1; i < topLines.size(); i++)
     {
         auto lineEq = lineInfosImg1[topLines[i].line1_index].line_eq_abc_norm;
-        double angle = std::acosf(std::min<double>((lineEq.x*firstLineEq.x) + (lineEq.y*firstLineEq.y), 1)) * 180/ CV_PI;
+        double angle = std::acos(std::min<double>((lineEq.x*firstLineEq.x) + (lineEq.y*firstLineEq.y), 1)) * 180/ CV_PI;
         if (std::min(angle, 180-angle) > maxAngle)
         {
             maxAngle = std::min(angle, 180-angle);
@@ -185,7 +185,7 @@ vector<top_line> getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, c
     // project the shared points to be exactly on the line
     // start with the lines that shared the highest number of points, so we can do top-N
     // return a list index by the lines (k,j) with the projected points themself
-    int num_line_ransac_iterations = int((log(0.01) / log(1 - pow(inlierRatio, 5)))) + 1;
+    int num_line_ransac_iterations = int((log(0.01) / log(1 - pow(inlierRatio, 3)))) + 1;
     
     // Go over the top lines with the most number of shared points, project the points, store by the matching indices of the pair of lines
     int num_sorted_lines = min((int)num_shared_points_vote.size(), 50);
