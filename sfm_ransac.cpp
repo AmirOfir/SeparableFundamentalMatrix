@@ -268,6 +268,7 @@ namespace cv {
 
                 Mat line_x1n = Mat(topLine.selected_line_points1);
                 Mat line_x2n = Mat(topLine.selected_line_points2);
+                cout << line_x1n << endl << line_x2n << endl;
                 //// Selected  points on the line
                 //Mat line_x1n = pointVectorToMat(topLine.selected_line_points1);
                 //line_x1n = line_x1n.t();

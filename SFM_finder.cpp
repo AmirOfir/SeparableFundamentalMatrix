@@ -32,6 +32,7 @@ void SFMEstimatorCallback::setFixedMatrices(InputArray _m1, InputArray _m2)
 {
     _m1.getMat().convertTo(fixed1, CV_64F);
     _m2.getMat().convertTo(fixed2, CV_64F);
+    //cout << _m1.getMat() << endl << fixed1 << endl << _m2.getMat() << fixed2 << endl;
 }
 
 bool SFMEstimatorCallback::checkSubset( InputArray _ms1, InputArray _ms2, int count ) const
@@ -43,9 +44,10 @@ bool SFMEstimatorCallback::checkSubset( InputArray _ms1, InputArray _ms2, int co
 int SFMEstimatorCallback::runKernel( InputArray _m1, InputArray _m2, OutputArray _model ) const
 {
     Mat m1 = _m1.getMat(), m2 = _m2.getMat();
-    cv::vconcat(m1, fixed1, m1);
-    cv::vconcat(m2, fixed2, m2);
+    cv::vconcat(fixed1, m1, m1);
+    cv::vconcat(fixed2, m2, m2);
 
+    //cout << m1 << endl << m2 << endl;
     Mat F = cv::findFundamentalMat(m1, m2, FM_8POINT);
     
     if (!F.empty() && F.data[0] != NULL)
@@ -137,16 +139,17 @@ Mat SeparableFundamentalMatFindCommand::Execute()
     
     Mat mask;
     f = Mat(3, 3, CV_64F);
-
-    vector<tuple<Mat,Mat>> lines = SFMRansac::prepareLinesForRansac(topMatchingLines);
+    int maxIterations = int((log(0.01) / log(1 - pow(inlierRatio, 5)))) + 1;
 
     Ptr<SFMEstimatorCallback> cb = makePtr<SFMEstimatorCallback>();
     int result;
 
-    for (auto &line : lines)
+    for (auto &topLine : topMatchingLines)
     {
-        cb->setFixedMatrices(get<0>(line), get<1>(line));
-        result = createRANSACPointSetRegistrator(cb, 5, 3.)->run(points1, points2, f, mask);
+        Mat line_x1n = Mat(topLine.selected_line_points1);
+        Mat line_x2n = Mat(topLine.selected_line_points2);
+        cb->setFixedMatrices(line_x1n, line_x2n);
+        result = createRANSACPointSetRegistrator(cb, 5, 3., 0.99, maxIterations)->run(points1, points2, f, mask);
 
         if (result > 0)
             break;
