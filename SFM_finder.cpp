@@ -125,7 +125,8 @@ SeparableFundamentalMatFindCommand::SeparableFundamentalMatFindCommand(InputArra
     isExecuting = false;
 }
 
-Mat SeparableFundamentalMatFindCommand::Execute()
+
+Mat SeparableFundamentalMatFindCommand::FindMat()
 {
     isExecuting = true;
 
@@ -160,108 +161,26 @@ Mat SeparableFundamentalMatFindCommand::Execute()
     return f;
 }
 
-/*
-cv::Mat findFundamentalMat( InputArray _points1, InputArray _points2, vector<Mat> matchingLines,
-                                int method, double ransacReprojThreshold, double confidence,
-                                int maxIters, OutputArray _mask )
+Mat SeparableFundamentalMatFindCommand::TransformResultMat(Mat mat)
 {
-    CV_INSTRUMENT_REGION();
+    Mat diag = Mat::zeros(3, 3, CV_64F);
+    diag.at<double>(0, 0) = houghRescale;
+    diag.at<double>(1, 1) = houghRescale;
+    diag.at<double>(2, 2) = 1;
 
-    if (method >= 32 && method <= 38)
-        return usac::findFundamentalMat(_points1, _points2, method,
-            ransacReprojThreshold, confidence, maxIters, _mask);
+    Mat ret = diag * mat;
+    return ret;
+}
 
-    Mat points1 = _points1.getMat(), points2 = _points2.getMat();
-    Mat m1, m2, F;
-    int npoints = -1;
-
-    for( int i = 1; i <= 2; i++ )
-    {
-        Mat& p = i == 1 ? points1 : points2;
-        Mat& m = i == 1 ? m1 : m2;
-        npoints = p.checkVector(2, -1, false);
-        if( npoints < 0 )
-        {
-            npoints = p.checkVector(3, -1, false);
-            if( npoints < 0 )
-                CV_Error(Error::StsBadArg, "The input arrays should be 2D or 3D point sets");
-            if( npoints == 0 )
-                return Mat();
-            convertPointsFromHomogeneous(p, p);
-        }
-        p.reshape(2, npoints).convertTo(m, CV_32F);
-    }
-
-    CV_Assert( m1.checkVector(2) == m2.checkVector(2) );
-
-    if( npoints < 7 )
-        return Mat();
-
-    Ptr<PointSetRegistrator::Callback> cb = makePtr<FMEstimatorCallback>();
-    int result;
-
-    if( npoints == 7 || method == FM_8POINT )
-    {
-        result = cb->runKernel(m1, m2, F);
-        if( _mask.needed() )
-        {
-            _mask.create(npoints, 1, CV_8U, -1, true);
-            Mat mask = _mask.getMat();
-            CV_Assert( (mask.cols == 1 || mask.rows == 1) && (int)mask.total() == npoints );
-            mask.setTo(Scalar::all(1));
-        }
-    }
-    else
-    {
-        if( ransacReprojThreshold <= 0 )
-            ransacReprojThreshold = 3;
-        if( confidence < DBL_EPSILON || confidence > 1 - DBL_EPSILON )
-            confidence = 0.99;
-
-        if( (method & ~3) == FM_RANSAC && npoints >= 15 )
-            result = createRANSACPointSetRegistrator(cb, 7, ransacReprojThreshold, confidence, maxIters)->run(m1, m2, F, _mask);
-        else
-            result = createLMeDSPointSetRegistrator(cb, 7, confidence)->run(m1, m2, F, _mask);
-    }
-
-    if( result <= 0 )
-        return Mat();
-
-    return F;
-}*/
-
-/*
-
-*/
 // pts1 is Mat of shape(X,2)
 // pts2 is Mat of shape(X,2)
 Mat cv::separableFundamentalMatrix::findSeparableFundamentalMat(InputArray _points1, InputArray _points2, int _imSizeHOrg, int _imSizeWOrg,
         float _inlierRatio, int _inlierThreashold, float _houghRescale, int _numMatchingPtsToUse, int _pixelRes,
         int _minHoughPints, int _thetaRes, float _maxDistancePtsLine, int _topLineRetries, int _minSharedPoints)
 {
-    
     SeparableFundamentalMatFindCommand command(_points1, _points2, _imSizeHOrg, _imSizeWOrg, _inlierRatio, _inlierThreashold, _houghRescale,
         _numMatchingPtsToUse, _pixelRes, _minHoughPints, _thetaRes, _maxDistancePtsLine, _topLineRetries, _minSharedPoints);
-    return command.Execute();
-
-
-        /*
-    int pts1Count = pts1.isVector() ? pts1.getMat().size().width : pts1.getMat().size().height;
-    if (hough_rescale == DEFAULT_HOUGH_RESCALE)
-        hough_rescale = float(2 * pts1Count) / im_size_h_org;
-    else if (hough_rescale > 1) // Only subsample
-        hough_rescale = 1;
-
-    auto topMatchingLines = FindMatchingLines(im_size_h_org, im_size_w_org, pts1, pts2, top_line_retries, hough_rescale, 
-        max_distance_pts_line, min_hough_points, pixel_res, theta_res, num_matching_pts_to_use, min_shared_points, inlier_ratio);
-
-    // We have at least one line
-    if (topMatchingLines.size())
-    {
-        Mat data = prepareDataForRansac(pts1, pts2);
-        vector<Mat> lines = prepareLinesForRansac(topMatchingLines);
-        uint maxNumIterations = (uint)std::floor(1 + std::log(0.01) / std::log(1 - pow(inlier_ratio, 5)));
-    }
-    */
-    return Mat();
+    Mat f = command.FindMat();
+    f = command.TransformResultMat(f);
+    return f;
 }

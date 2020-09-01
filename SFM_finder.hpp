@@ -151,7 +151,9 @@ namespace cv
                 points2.release();
             }
 
-            Mat Execute();
+            Mat FindMat();
+
+            Mat TransformResultMat(Mat mat);
 
             static vector<top_line> FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
                 const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
