@@ -33,7 +33,7 @@ namespace cv
             CV_Assert(points.size() > 2);
             int aIdx = 0, bIdx = 1;
             double maxDist = norm(points[0] - points[1]);
-            for (size_t i = 1; i < points.size() - 1; i++)
+            for (size_t i = 0; i < points.size() - 1; i++)
             {
                 for (size_t j = i + 1; j < points.size(); j++)
                 {
@@ -56,24 +56,24 @@ namespace cv
         }
 
 
-        struct IntervalMedianResult
+        struct IntervalMidPointResult
         {
-            int medianIdx;
+            int midPointIdx;
             double minDistance;
         };
 
         template <typename _Tp>
-        IntervalMedianResult intervalMedian(const vector<Point_<_Tp>> &points, int firstIdx, int secondIdx)
+        IntervalMidPointResult intervalPointClosestToCenter(const vector<Point_<_Tp>> &points, int endpoint1Idx, int endpoint2Idx)
         {
             CV_Assert(points.size() > 2);
 
-            Point_<_Tp> start = points[firstIdx], end = points[secondIdx];
+            Point_<_Tp> start = points[endpoint1Idx], end = points[endpoint2Idx];
             double minDist = norm(end - start);
             double medianIdx = 0;
             
             for (size_t i = 0; i < points.size(); i++)
             {
-                if (i != firstIdx && i != secondIdx)
+                if (i != endpoint1Idx && i != endpoint2Idx)
                 {
                     double currDist = abs(norm(points[i] - start) - norm(points[i] - end));
                     if (currDist < minDist)
@@ -87,8 +87,8 @@ namespace cv
             // The min distance from the median point to the endpoints
             minDist = min(norm(points[medianIdx] - start), norm(points[medianIdx] - end));
 
-            IntervalMedianResult ret;
-            ret.medianIdx = medianIdx;
+            IntervalMidPointResult ret;
+            ret.midPointIdx = medianIdx;
             ret.minDistance = minDist;
             return ret;
         }
