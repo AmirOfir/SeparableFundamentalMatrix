@@ -61,25 +61,24 @@ TEST(LineGeometry, TestIntervalEndpoints3) {
         
 }
 
-/*
+
 TEST(LineGeometry, TestIntervalEndpoints4) {
   vector<Point2f> vec
     {
-       Point2d(1319.22244357,  617.63204506),
-       Point2d(1300.41905565,  600.09760313),
-       Point2d(1257.33395268,  559.92009684),
-       Point2d(1291.72343069,  591.98880212),
-       Point2d(1316.54069944,  615.13127834),
-       Point2d(1308.0230798 ,  607.18846997),
-       Point2d(1247.61317678,  550.85532717)
+       Point2d(1315.85252612,  627.01052812),
+       Point2d(1325.21065373,  633.32266399),
+       Point2d(1368.63698616,  662.61409088),
+       Point2d(1034.00795118,  436.90398913),
+       Point2d(1229.35159821,  568.66492389),
+       Point2d(1297.52047378,  614.64540446)
     };
 
     auto result = intervalEndpoints(vec);
-    EXPECT_TRUE(result.distance - 97.91331442090005 < 1e-3);
-    EXPECT_TRUE( (result.firstIdx == 3 && result.secondIdx == 0) ||
-               (result.firstIdx == 0 && result.secondIdx == 3) );
+    EXPECT_TRUE(abs(result.distance - 403.63553000468835) < 1e-3);
+    EXPECT_TRUE(result.firstIdx == 2 || result.firstIdx == 3);
+    EXPECT_TRUE(result.secondIdx == 2 || result.secondIdx == 3);
 }
-*/
+
 
 TEST(LineGeometry, TestIntervalPointClosestToCenter) {
     vector<Point2f> vec
@@ -111,4 +110,20 @@ TEST(LineGeometry, TestIntervalPointClosestToCenter1) {
     auto result = intervalPointClosestToCenter(vec, 0, 3);
     EXPECT_EQ(result.midPointIdx, 1);
     CV_Assert(abs(result.minDistance - 41.58253575164936) < 0.001);
+}
+
+TEST(LineGeometry, TestIntervalPointClosestToCenter2) {
+    vector<Point2f> vec
+    {
+       Point2d(1315.85252612,  627.01052812),
+       Point2d(1325.21065373,  633.32266399),
+       Point2d(1368.63698616,  662.61409088),
+       Point2d(1034.00795118,  436.90398913),
+       Point2d(1229.35159821,  568.66492389),
+       Point2d(1297.52047378,  614.64540446)
+    };
+
+    auto result = intervalPointClosestToCenter(vec, 2, 3);
+    EXPECT_EQ(result.midPointIdx, 4);
+    CV_Assert(abs(result.minDistance - 168.00852739087864) < 0.001);
 }
