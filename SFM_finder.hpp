@@ -45,7 +45,6 @@ the use of this software, even if advised of the possibility of such damage.
 #define _OPENCV_SFM_FINDER_H_
 
 #include <opencv2/opencv.hpp>
-#include <opencv2/xfeatures2d.hpp>
 
 #include "np_cv_imp.hpp"
 #include "matching_points.hpp"
@@ -57,113 +56,109 @@ using namespace std;
 
 #define DEFAULT_HOUGH_RESCALE -1
 
-namespace cv 
-{ 
-    namespace separableFundamentalMatrix 
+namespace cv { 
+namespace separableFundamentalMatrix {
+Mat findSeparableFundamentalMat(InputArray pts1, InputArray pts2, int im_size_h_org, int im_size_w_org,
+    float inlier_ratio = 0.4, int inlier_threshold = 3,
+    float hough_rescale = DEFAULT_HOUGH_RESCALE, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
+    int theta_res = 180, float max_distance_pts_line = 3, int top_line_retries = 2, int min_shared_points = 4);    
+
+struct line_info
+{
+    vector<int> matching_indexes;
+    Point3d line_eq_abc;
+    Point3d line_eq_abc_norm;
+    Point2d bottom_left_edge_point;
+    Point2d top_right_edge_point;
+    double max_distance;
+    int line_index;
+};
+
+class top_line
+{
+    void init(const top_line &o)
     {
-        Mat findSeparableFundamentalMat(InputArray pts1, InputArray pts2, int im_size_h_org, int im_size_w_org,
-            float inlier_ratio = 0.4, int inlier_threshold = 3,
-            float hough_rescale = DEFAULT_HOUGH_RESCALE, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
-            int theta_res = 180, float max_distance_pts_line = 3, int top_line_retries = 2, int min_shared_points = 4);    
-
-        struct line_info
-        {
-            vector<int> matching_indexes;
-            Point3d line_eq_abc;
-            Point3d line_eq_abc_norm;
-            Point2d bottom_left_edge_point;
-            Point2d top_right_edge_point;
-            double max_distance;
-            int line_index;
-        };
-
-        class top_line
-        {
-            void init(const top_line &o)
-            {
-                num_inliers = o.num_inliers;
-                line1_index = o.line1_index;
-                line2_index = o.line2_index;
-                max_dist = o.max_dist;
-                min_dist = o.min_dist;
-                homg_err = o.homg_err;
-            }
-        public:
-            bool empty() { return num_inliers == 0; }
-            int num_inliers;
-            vector<Point2d> line_points_1;
-            vector<Point2d> line_points_2;
-            int line1_index;
-            int line2_index;
-            vector<int> inlier_selected_index;
-            vector<Point2d> selected_line_points1;
-            vector<Point2d> selected_line_points2;
-            double max_dist;
-            double min_dist;
-            double homg_err;
-        };
-
-        class SFMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback
-        {
-            private:
-            Mat fixed1;
-            Mat fixed2;
-        public:
-            ~SFMEstimatorCallback()
-            {
-                fixed1.release();
-                fixed2.release();
-            }
-            void setFixedMatrices(InputArray _m1, InputArray _m2);
-            bool checkSubset(InputArray _ms1, InputArray _ms2, int count) const CV_OVERRIDE;
-            int runKernel(InputArray _m1, InputArray _m2, OutputArray _model) const CV_OVERRIDE;
-            void computeError(InputArray _m1, InputArray _m2, InputArray _model, OutputArray _err) const CV_OVERRIDE;
-        };
-
-        class SeparableFundamentalMatFindCommand
-        {
-        private:
-            int imSizeHOrg;
-            int imSizeWOrg;
-            float inlierRatio; 
-            int inlierThreashold; 
-            float houghRescale; 
-            int numMatchingPtsToUse; 
-            int pixelRes;
-            int minHoughPints; 
-            int thetaRes;
-            float maxDistancePtsLine;
-            int topLineRetries;
-            int minSharedPoints;
-            bool isExecuting;
-            Mat points1;
-            Mat points2;
-            int nPoints;
-            
-        public:
-            SeparableFundamentalMatFindCommand(InputArray _points1, InputArray _points2, int _imSizeHOrg, int _imSizeWOrg,
-                float _inlierRatio, int _inlierThreashold, float _houghRescale, int _numMatchingPtsToUse, int _pixelRes,
-                int _minHoughPints, int _thetaRes, float _maxDistancePtsLine, int _topLineRetries, int _minSharedPoints);
-            
-            ~SeparableFundamentalMatFindCommand()
-            {
-                points1.release();
-                points2.release();
-            }
-
-            Mat FindMat();
-
-            Mat TransformResultMat(Mat mat);
-
-            static vector<top_line> FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
-                const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
-                int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio);
-
-            //int FindMat(Mat& _fmatrix );
-        };
-
-        
+        num_inliers = o.num_inliers;
+        line1_index = o.line1_index;
+        line2_index = o.line2_index;
+        max_dist = o.max_dist;
+        min_dist = o.min_dist;
+        homg_err = o.homg_err;
     }
+public:
+    bool empty() { return num_inliers == 0; }
+    int num_inliers;
+    vector<Point2d> line_points_1;
+    vector<Point2d> line_points_2;
+    int line1_index;
+    int line2_index;
+    vector<int> inlier_selected_index;
+    vector<Point2d> selected_line_points1;
+    vector<Point2d> selected_line_points2;
+    double max_dist;
+    double min_dist;
+    double homg_err;
+};
+
+class SFMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback
+{
+    private:
+    Mat fixed1;
+    Mat fixed2;
+public:
+    ~SFMEstimatorCallback()
+    {
+        fixed1.release();
+        fixed2.release();
+    }
+    void setFixedMatrices(InputArray _m1, InputArray _m2);
+    bool checkSubset(InputArray _ms1, InputArray _ms2, int count) const CV_OVERRIDE;
+    int runKernel(InputArray _m1, InputArray _m2, OutputArray _model) const CV_OVERRIDE;
+    void computeError(InputArray _m1, InputArray _m2, InputArray _model, OutputArray _err) const CV_OVERRIDE;
+};
+
+class SeparableFundamentalMatFindCommand
+{
+private:
+    int imSizeHOrg;
+    int imSizeWOrg;
+    float inlierRatio; 
+    int inlierThreashold; 
+    float houghRescale; 
+    int numMatchingPtsToUse; 
+    int pixelRes;
+    int minHoughPints; 
+    int thetaRes;
+    float maxDistancePtsLine;
+    int topLineRetries;
+    int minSharedPoints;
+    bool isExecuting;
+    Mat points1;
+    Mat points2;
+    int nPoints;
+            
+public:
+    SeparableFundamentalMatFindCommand(InputArray _points1, InputArray _points2, int _imSizeHOrg, int _imSizeWOrg,
+        float _inlierRatio, int _inlierThreashold, float _houghRescale, int _numMatchingPtsToUse, int _pixelRes,
+        int _minHoughPints, int _thetaRes, float _maxDistancePtsLine, int _topLineRetries, int _minSharedPoints);
+            
+    ~SeparableFundamentalMatFindCommand()
+    {
+        points1.release();
+        points2.release();
+    }
+
+    Mat FindMat();
+
+    Mat TransformResultMat(Mat mat);
+
+    static vector<top_line> FindMatchingLines(const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
+        const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
+        int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio);
+
+};
+        
+}
 }
 
 #endif // !_OPENCV_SFM_FINDER_H_

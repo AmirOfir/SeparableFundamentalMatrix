@@ -220,7 +220,6 @@ public:
     int maxIters;
 };
 
-
 Ptr<PointSetRegistrator> createRANSACPointSetRegistrator(const Ptr<PointSetRegistrator::Callback>& _cb,
     int _modelPoints, double _threshold, double _confidence, int _maxIters)
 {
@@ -228,70 +227,4 @@ Ptr<PointSetRegistrator> createRANSACPointSetRegistrator(const Ptr<PointSetRegis
         new RANSACPointSetRegistrator(_cb, _modelPoints, _threshold, _confidence, _maxIters));
 }
 
-}
-
-namespace cv {
-    namespace separableFundamentalMatrix {
-
-        void SFMRansac::h_coordinates(InputOutputArray _pts)
-        {
-            Mat pts = _pts.getMat();
-            Mat zeros = Mat::ones(1, pts.cols, pts.type());
-            vconcat(pts, zeros, pts);
-            _pts.assign(pts);
-        }
-
-        Mat SFMRansac::prepareDataForRansac(InputArray _pts1, InputArray _pts2)
-        {
-            Mat pts1 = _pts1.getMat();
-            Mat pts2 = _pts2.getMat();
-
-            Mat x1n = pts1.t();
-            h_coordinates(x1n);
-
-            Mat x2n = pts2.t();
-            h_coordinates(x2n);
-
-            Mat data;
-            cv::vconcat(x1n, x2n, data);
-            data = data.t();
-            return data;
-        }
-
-        vector<tuple<Mat,Mat>> SFMRansac::prepareLinesForRansac(const vector<top_line> &topMatchingLines)
-        {
-            vector<tuple<Mat,Mat>> arrlines;
-
-            for (auto topLine : topMatchingLines)
-            {
-                CV_Assert(topLine.selected_line_points1.size() && topLine.selected_line_points2.size());
-
-                Mat line_x1n = Mat(topLine.selected_line_points1);
-                Mat line_x2n = Mat(topLine.selected_line_points2);
-                cout << line_x1n << endl << line_x2n << endl;
-                //// Selected  points on the line
-                //Mat line_x1n = pointVectorToMat(topLine.selected_line_points1);
-                //line_x1n = line_x1n.t();
-                //h_coordinates(line_x1n);
-        
-                //Mat line_x2n = pointVectorToMat(topLine.selected_line_points2);
-                //line_x2n = line_x2n.t();
-                //h_coordinates(line_x2n);
-
-                arrlines.push_back(make_tuple(line_x1n,line_x2n));
-            }
-            return arrlines;
-        }
-
-        
-        FastFundamentalMatrixRansacResult SFMRansac::fastFundamentalMatrixRansac(uint maxNumIterations, Mat data, 
-            int inlier_threshold, const vector<Mat> &arrlines)
-        {
-            FastFundamentalMatrixRansacResult ret;
-            return ret;
-        }
-
-        
-
-    }
 }

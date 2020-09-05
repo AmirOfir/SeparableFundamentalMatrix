@@ -30,21 +30,6 @@ namespace cv
                 int inlier_threshold, const vector<Mat> &arrlines);
         };
 
-        /*
-        class SFMRansac
-        {
-        public:
-            SFMRansac(int _modelPoints=0, double _threshold=0, double _confidence=0.99,int _maxIters = 1000) 
-                : maxIters(_maxIters),modelPoints(_modelPoints), threshold(_threshold), confidence(_confidence)
-            { }
-            bool run(InputArray _m1, InputArray _m2, OutputArray _model, OutputArray _mask);
-        private:
-            int maxIters;
-            int modelPoints;
-            double threshold;
-            double confidence;
-        };*/
-        
         
     }
 }

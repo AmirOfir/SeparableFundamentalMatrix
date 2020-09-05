@@ -8,94 +8,76 @@
 
 #include <numeric>
 #include <opencv2/opencv.hpp>
-#include <opencv2\core\core_c.h>
 #include "np_cv_imp.hpp"
 
-namespace cv { namespace separableFundamentalMatrix
-{
-    using namespace cv;
-    using namespace std;
+namespace cv { 
+namespace separableFundamentalMatrix {
+using namespace cv;
+using namespace std;
     
-    template <typename _Tp>
-    struct MatchingPoints
+template <typename _Tp>
+struct MatchingPoints
+{
+    Point_<_Tp> left;
+    Point_<_Tp> right;
+};
+
+template <typename _Tp>
+class VecMatchingPoints {
+private:
+    vector<Point_<_Tp>> _left;
+    vector<Point_<_Tp>> _right;
+public:
+    VecMatchingPoints() {}
+    VecMatchingPoints(const VecMatchingPoints &cpy) : _left(cpy._left), _right(cpy._right) {}
+    VecMatchingPoints(const vector<Point_<_Tp>> &left, const vector<Point_<_Tp>> &right) : _left(left), _right(right)
     {
-        Point_<_Tp> left;
-        Point_<_Tp> right;
-    };
-
-    template <typename _Tp>
-    class VecMatchingPoints {
-    private:
-        vector<Point_<_Tp>> _left;
-        vector<Point_<_Tp>> _right;
-    public:
-        VecMatchingPoints() {}
-        VecMatchingPoints(const VecMatchingPoints &cpy) : _left(cpy._left), _right(cpy._right) {}
-        VecMatchingPoints(const vector<Point_<_Tp>> &left, const vector<Point_<_Tp>> &right) : _left(left), _right(right)
-        {
-            CV_Assert(left.size() == right.size());
-        }
+        CV_Assert(left.size() == right.size());
+    }
         
-        size_t size() const { return _left.size(); }
+    size_t size() const { return _left.size(); }
         
-        Mat leftMat() const 
-        {
-            Mat ret = pointVectorToMat(_left);
-            return ret;
-        }
+    Mat leftMat() const 
+    {
+        Mat ret = pointVectorToMat(_left);
+        return ret;
+    }
 
-        Mat rightMat() const
-        {
-            Mat ret = pointVectorToMat(_right);
-            return ret;
-        }
+    Mat rightMat() const
+    {
+        Mat ret = pointVectorToMat(_right);
+        return ret;
+    }
 
-        const MatchingPoints<_Tp> operator[](int index) const
-        {
-            MatchingPoints<_Tp> ret;
-            ret.left = _left[index];
-            ret.right = _right[index];
-            return ret;
-        }
+    const MatchingPoints<_Tp> operator[](int index) const
+    {
+        MatchingPoints<_Tp> ret;
+        ret.left = _left[index];
+        ret.right = _right[index];
+        return ret;
+    }
 
-        VecMatchingPoints<_Tp> randomSample(uint sizeOfsample) const
-        {
-            VecMatchingPoints<_Tp> ret;
+    VecMatchingPoints<_Tp> randomSample(uint sizeOfsample) const
+    {
+        VecMatchingPoints<_Tp> ret;
 
-            std::vector<int> v(size()) ; // vector with N ints.
-            iota (v.begin(), v.end(), 0); // Fill with 0, 1, ..., 99.
-            random_shuffle(v.begin(), v.end());
+        std::vector<int> v(size()) ; // vector with N ints.
+        iota (v.begin(), v.end(), 0); // Fill with 0, 1, ..., 99.
+        random_shuffle(v.begin(), v.end());
             
-            for (auto i = 0; i < sizeOfsample; i++)
-            {
-                int ix = v[i];
-                ret._left.push_back(_left[ix]);
-                ret._right.push_back(_right[ix]);
-            }
-
-            return ret;
-        }
-
-        template <typename _Tp>
-        static vector<VecMatchingPoints<_Tp>> randomSamples(const VecMatchingPoints<_Tp> &source, uint iterations, uint sizeOfSample)
+        for (auto i = 0; i < sizeOfsample; i++)
         {
-            vector<VecMatchingPoints<_Tp>> ret;
-            Mat randomIndices = randomIntMat(iterations, sizeOfSample, 0, (int)source.size());
-            for (uint iteration = 0; iteration < iterations; iteration++)
-            {
-                VecMatchingPoints<_Tp> curr;
-                ret.push_back(curr);
-                for (uint i = 0; i < sizeOfSample; i++)
-                {
-                    int ix = randomIndices.at<int>(iteration, i);
-                    curr._left.push_back(source._left[ix]);
-                    curr._right.push_back(source._right[ix]);
-                }
-            }
-            return ret;
+            int ix = v[i];
+            ret._left.push_back(_left[ix]);
+            ret._right.push_back(_right[ix]);
         }
-    };                    
-}}
+
+        return ret;
+    }
+};
+
+}
+}
 
 
 #endif // !_OPENCV_MATCHING_POINTS_H_

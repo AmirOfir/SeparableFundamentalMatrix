@@ -3,8 +3,9 @@
 using namespace cv;
 using namespace std;
 using namespace cv::separableFundamentalMatrix;
+
 namespace cv {
-    namespace separableFundamentalMatrix {
+namespace separableFundamentalMatrix {
 
 void FlattenToMat(const vector<Vec4f> &data, OutputArray _dst)
 {
@@ -17,18 +18,5 @@ void FlattenToMat(const vector<Vec4f> &data, OutputArray _dst)
     _dst.assign(mat);
 }
 
-//vector<MatchingPoints> randomSamples(int iterations, int sizeOfSample, const MatchingPoints &matchingPoints)
-//{
-//    vector<MatchingPoints> ret;
-//    Mat randomIndices = randomIntMat(iterations, sizeOfSample, 0, matchingPoints.left.size());
-//    for (int iteration = 0; iteration < iterations; iteration++)
-//    {
-//
-//    }
-//}
-
-
-
-
-    }
+}
 }

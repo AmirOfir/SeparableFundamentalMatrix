@@ -169,6 +169,7 @@ int main()
         Mat ret = cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
 
         ShowImage(imgA);
+        return 0;
     }
     /*
 
