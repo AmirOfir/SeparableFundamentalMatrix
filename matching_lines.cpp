@@ -218,154 +218,154 @@ vector<top_line> getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, c
     //return {};
 }
 
-        template <typename _Tp>
-        vector<_Tp> findIntersectionPoints(_Tp rho, _Tp theta, const int im_size_w, const int im_size_h)
+template <typename _Tp>
+vector<_Tp> findIntersectionPoints(_Tp rho, _Tp theta, const int im_size_w, const int im_size_h)
+{
+    _Tp a = cos(theta);
+    _Tp b = sin(theta);
+    _Tp x_0 = a != 0 ? rho / a : -1000;
+    _Tp x_1 = a != 0 ? (rho - (b * im_size_w)) / a : -1000;
+    _Tp y_0 = b != 0 ? rho / b : -1000;
+    _Tp y_1 = b != 0 ? (rho - (a * im_size_h)) / b : -1000;
+
+    vector<_Tp> ret;
+    if (x_0 >= 0 && x_0 < im_size_h)
+    {
+        ret.push_back(x_0);
+        ret.push_back(0);
+    }
+    if (y_0 >= 0 && y_0 < im_size_w)
+    {
+        ret.push_back(0);
+        ret.push_back(y_0);
+    }
+    if (x_1 >= 0 && x_1 < im_size_h)
+    {
+        ret.push_back(x_1);
+        ret.push_back(_Tp(im_size_w));
+    }
+    if (y_1 >= 0 && y_1 < im_size_w)
+    {
+        ret.push_back(_Tp(im_size_h));
+        ret.push_back(y_1);
+    }
+
+    return ret;
+}
+
+template <typename _Tp>
+line_info createLineInfo(Mat pts, const vector<_Tp> &points_intersection, _Tp max_distance, int line_index)
+{
+    CV_Assert(points_intersection.size() == 4);
+
+    Point3_<_Tp> pt1(points_intersection[0], points_intersection[1], 1);
+    Point3_<_Tp> pt2(points_intersection[2], points_intersection[3], 1);
+    Point3_<_Tp> line_eq = pt1.cross(pt2);
+
+    if (abs(line_eq.z) >= FLT_EPSILON)
+    {
+        // divide by z
+        line_eq /= line_eq.z;
+    }
+    // too small to divide, solve with least square
+    else
+    {
+        _Tp a[4] = { points_intersection[0],1,
+                        points_intersection[2],1 };
+        Mat A(2, 2, CV_8U, &a);
+        vector<_Tp> B{ points_intersection[1], points_intersection[2] };
+        vector<_Tp> x;
+        solve(A, B, x);
+        line_eq.x = x[0];
+        line_eq.y = -1;
+        line_eq.z = 0;
+    }
+
+    vector<int> matching_indexes;
+    {
+        _Tp scale = sqrt((line_eq.x * line_eq.x) + (line_eq.y * line_eq.y));
+        auto d = MatrixVectorMul<_Tp>(pts, line_eq, 1.f / scale, true);
+        matching_indexes = index_if(d.begin(), d.end(), [&](_Tp f) {return f < max_distance; });
+    }
+
+    auto lineEqNormDivider = sqrt(pow(line_eq.x, 2) + pow(line_eq.y, 2)) + FLT_EPSILON;
+
+    line_info ret;
+    ret.matching_indexes = matching_indexes;
+    ret.line_eq_abc = line_eq;
+    ret.line_eq_abc_norm = line_eq / lineEqNormDivider;
+    ret.bottom_left_edge_point = Point2d(points_intersection[0], points_intersection[1]);
+    ret.top_right_edge_point = Point2d(points_intersection[2], points_intersection[3]);
+    ret.max_distance = max_distance;
+    ret.line_index = line_index;
+    return ret;
+}
+
+vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
+    int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use)
+{
+    Mat ptsRounded = pts.clone();
+    ptsRounded.convertTo(ptsRounded, CV_32S);
+
+    Mat bw_img = Mat::zeros(im_size_h, im_size_w, CV_8U);
+    num_matching_pts_to_use = min(ptsRounded.size().height, num_matching_pts_to_use);
+    for (int addedCount = 0; addedCount < num_matching_pts_to_use; ++addedCount)
+    {
+        int x0 = ptsRounded.at<int>(addedCount, 1), x1 = ptsRounded.at<int>(addedCount, 0);
+        bw_img.at<uint8_t>(x0, x1) = (unsigned short)255;
+    }
+
+    vector<Vec2f> houghLines;
+    cv::HoughLines(bw_img, houghLines, pixel_res, CV_PI / theta_res, min_hough_points);
+
+    vector<line_info> lineInfos;
+    int lineIndex = 0;
+    for (auto l : houghLines)
+    {
+        double rho = l[0], theta = l[1];
+        auto p_intersect = findIntersectionPoints(rho, theta, im_size_w, im_size_h);
+        if (p_intersect.size() == 4)
         {
-            _Tp a = cos(theta);
-            _Tp b = sin(theta);
-            _Tp x_0 = a != 0 ? rho / a : -1000;
-            _Tp x_1 = a != 0 ? (rho - (b * im_size_w)) / a : -1000;
-            _Tp y_0 = b != 0 ? rho / b : -1000;
-            _Tp y_1 = b != 0 ? (rho - (a * im_size_h)) / b : -1000;
-
-            vector<_Tp> ret;
-            if (x_0 >= 0 && x_0 < im_size_h)
-            {
-                ret.push_back(x_0);
-                ret.push_back(0);
-            }
-            if (y_0 >= 0 && y_0 < im_size_w)
-            {
-                ret.push_back(0);
-                ret.push_back(y_0);
-            }
-            if (x_1 >= 0 && x_1 < im_size_h)
-            {
-                ret.push_back(x_1);
-                ret.push_back(_Tp(im_size_w));
-            }
-            if (y_1 >= 0 && y_1 < im_size_w)
-            {
-                ret.push_back(_Tp(im_size_h));
-                ret.push_back(y_1);
-            }
-
-            return ret;
+            lineInfos.push_back(createLineInfo(pts, p_intersect, max_distance, lineIndex));
+            ++lineIndex;
         }
+    }
 
-        template <typename _Tp>
-        line_info createLineInfo(Mat pts, const vector<_Tp> &points_intersection, _Tp max_distance, int line_index)
-        {
-            CV_Assert(points_intersection.size() == 4);
+    return lineInfos;
+}
 
-            Point3_<_Tp> pt1(points_intersection[0], points_intersection[1], 1);
-            Point3_<_Tp> pt2(points_intersection[2], points_intersection[3], 1);
-            Point3_<_Tp> line_eq = pt1.cross(pt2);
+vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines(
+    const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
+    const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
+    int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio)
+{
+    hough_rescale = hough_rescale * 2; // for the first time
+    max_distance_pts_line = max_distance_pts_line * 0.5;
 
-            if (abs(line_eq.z) >= FLT_EPSILON)
-            {
-                // divide by z
-                line_eq /= line_eq.z;
-            }
-            // too small to divide, solve with least square
-            else
-            {
-                _Tp a[4] = { points_intersection[0],1,
-                               points_intersection[2],1 };
-                Mat A(2, 2, CV_8U, &a);
-                vector<_Tp> B{ points_intersection[1], points_intersection[2] };
-                vector<_Tp> x;
-                solve(A, B, x);
-                line_eq.x = x[0];
-                line_eq.y = -1;
-                line_eq.z = 0;
-            }
-
-            vector<int> matching_indexes;
-            {
-                _Tp scale = sqrt((line_eq.x * line_eq.x) + (line_eq.y * line_eq.y));
-                auto d = MatrixVectorMul<_Tp>(pts, line_eq, 1.f / scale, true);
-                matching_indexes = index_if(d.begin(), d.end(), [&](_Tp f) {return f < max_distance; });
-            }
-
-            auto lineEqNormDivider = sqrt(pow(line_eq.x, 2) + pow(line_eq.y, 2)) + FLT_EPSILON;
-
-            line_info ret;
-            ret.matching_indexes = matching_indexes;
-            ret.line_eq_abc = line_eq;
-            ret.line_eq_abc_norm = line_eq / lineEqNormDivider;
-            ret.bottom_left_edge_point = Point2d(points_intersection[0], points_intersection[1]);
-            ret.top_right_edge_point = Point2d(points_intersection[2], points_intersection[3]);
-            ret.max_distance = max_distance;
-            ret.line_index = line_index;
-            return ret;
-        }
-
-        vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
-            int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use)
-        {
-            Mat ptsRounded = pts.clone();
-            ptsRounded.convertTo(ptsRounded, CV_32S);
-
-            Mat bw_img = Mat::zeros(im_size_h, im_size_w, CV_8U);
-            num_matching_pts_to_use = min(ptsRounded.size().height, num_matching_pts_to_use);
-            for (int addedCount = 0; addedCount < num_matching_pts_to_use; ++addedCount)
-            {
-                int x0 = ptsRounded.at<int>(addedCount, 1), x1 = ptsRounded.at<int>(addedCount, 0);
-                bw_img.at<uint8_t>(x0, x1) = (unsigned short)255;
-            }
-
-            vector<Vec2f> houghLines;
-            cv::HoughLines(bw_img, houghLines, pixel_res, CV_PI / theta_res, min_hough_points);
-
-            vector<line_info> lineInfos;
-            int lineIndex = 0;
-            for (auto l : houghLines)
-            {
-                double rho = l[0], theta = l[1];
-                auto p_intersect = findIntersectionPoints(rho, theta, im_size_w, im_size_h);
-                if (p_intersect.size() == 4)
-                {
-                    lineInfos.push_back(createLineInfo(pts, p_intersect, max_distance, lineIndex));
-                    ++lineIndex;
-                }
-            }
-
-            return lineInfos;
-        }
-
-        vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines(
-            const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
-            const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
-            int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio)
-        {
-            hough_rescale = hough_rescale * 2; // for the first time
-            max_distance_pts_line = max_distance_pts_line * 0.5;
-
-            Mat pts1Org = pts1.isMat() ? pts1.getMat() : pts1.getMat().t();
-            Mat pts2Org = pts2.isMat() ? pts2.getMat() : pts2.getMat().t();
+    Mat pts1Org = pts1.isMat() ? pts1.getMat() : pts1.getMat().t();
+    Mat pts2Org = pts2.isMat() ? pts2.getMat() : pts2.getMat().t();
             
-            vector<top_line> topMatchingLines;
-            // we sample a small subset of features to use in the hough transform, if our sample is too sparse, increase it
-            for (auto i = 0; i < top_line_retries && topMatchingLines.size() < 2; i++)
-            {
-                // rescale points and image size for fast line detection
-                hough_rescale = hough_rescale * 0.5;
-                max_distance_pts_line = max_distance_pts_line * 2;
-                auto pts1 = hough_rescale * pts1Org;
-                auto pts2 = hough_rescale * pts2Org;
-                auto im_size_h = int(round(im_size_h_org * hough_rescale)) + 3;
-                auto im_size_w = int(round(im_size_w_org * hough_rescale)) + 3;
+    vector<top_line> topMatchingLines;
+    // we sample a small subset of features to use in the hough transform, if our sample is too sparse, increase it
+    for (auto i = 0; i < top_line_retries && topMatchingLines.size() < 2; i++)
+    {
+        // rescale points and image size for fast line detection
+        hough_rescale = hough_rescale * 0.5;
+        max_distance_pts_line = max_distance_pts_line * 2;
+        auto pts1 = hough_rescale * pts1Org;
+        auto pts2 = hough_rescale * pts2Org;
+        auto im_size_h = int(round(im_size_h_org * hough_rescale)) + 3;
+        auto im_size_w = int(round(im_size_w_org * hough_rescale)) + 3;
 
-                auto linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
-                auto linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
+        auto linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
+        auto linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
 
-                if (linesImg1.size() && linesImg2.size())
-                {
-                    topMatchingLines =
-                        getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, min_shared_points, inlier_ratio);
-                }
-            }
-
-            return topMatchingLines;
+        if (linesImg1.size() && linesImg2.size())
+        {
+            topMatchingLines =
+                getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, min_shared_points, inlier_ratio);
         }
+    }
+
+    return topMatchingLines;
+}

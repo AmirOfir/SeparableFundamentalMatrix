@@ -76,15 +76,6 @@ struct line_info
 
 class top_line
 {
-    void init(const top_line &o)
-    {
-        num_inliers = o.num_inliers;
-        line1_index = o.line1_index;
-        line2_index = o.line2_index;
-        max_dist = o.max_dist;
-        min_dist = o.min_dist;
-        homg_err = o.homg_err;
-    }
 public:
     bool empty() { return num_inliers == 0; }
     int num_inliers;
