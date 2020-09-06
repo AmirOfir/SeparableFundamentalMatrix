@@ -7,15 +7,20 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/xfeatures2d.hpp>
-namespace cv { namespace separableFundamentalMatrix
-{
-    using namespace cv;
-    using namespace std;
+namespace cv { 
+namespace separableFundamentalMatrix {
 
-    
-    
+using namespace cv;
+using namespace std;
 
-}}
+vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
+    int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use);
+    
+vector<top_line> getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
+    const vector<line_info> &lineInfosImg2, int minSharedPoints, double inlierRatio);
+
+}
+}
 
 
 #endif // !_OPENCV_MATCHING_LINES_H_

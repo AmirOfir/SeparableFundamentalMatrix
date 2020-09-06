@@ -1,3 +1,5 @@
+#include "precomp.hpp"
+#include "matching_lines.hpp"
 #include "SFM_finder.hpp"
 #include "np_cv_imp.hpp"
 #include "line_geometry.hpp"
@@ -146,7 +148,7 @@ top_line createTopLine(InputArray _ptsImg1, InputArray _ptsImg2, const vector<Po
     return curr;
 }
 
-vector<top_line> getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
+vector<top_line> cv::separableFundamentalMatrix::getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
     const vector<line_info> &lineInfosImg2, int minSharedPoints, double inlierRatio)
 {
 
@@ -301,7 +303,7 @@ line_info createLineInfo(Mat pts, const vector<_Tp> &points_intersection, _Tp ma
     return ret;
 }
 
-vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
+vector<line_info> cv::separableFundamentalMatrix::getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
     int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use)
 {
     Mat ptsRounded = pts.clone();
@@ -332,40 +334,4 @@ vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_
     }
 
     return lineInfos;
-}
-
-vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines(
-    const int im_size_h_org, const int im_size_w_org, cv::InputArray pts1, cv::InputArray pts2,
-    const int top_line_retries, float hough_rescale, float max_distance_pts_line, int min_hough_points, int pixel_res,
-    int theta_res, int num_matching_pts_to_use, int min_shared_points, float inlier_ratio)
-{
-    hough_rescale = hough_rescale * 2; // for the first time
-    max_distance_pts_line = max_distance_pts_line * 0.5;
-
-    Mat pts1Org = pts1.isMat() ? pts1.getMat() : pts1.getMat().t();
-    Mat pts2Org = pts2.isMat() ? pts2.getMat() : pts2.getMat().t();
-            
-    vector<top_line> topMatchingLines;
-    // we sample a small subset of features to use in the hough transform, if our sample is too sparse, increase it
-    for (auto i = 0; i < top_line_retries && topMatchingLines.size() < 2; i++)
-    {
-        // rescale points and image size for fast line detection
-        hough_rescale = hough_rescale * 0.5;
-        max_distance_pts_line = max_distance_pts_line * 2;
-        auto pts1 = hough_rescale * pts1Org;
-        auto pts2 = hough_rescale * pts2Org;
-        auto im_size_h = int(round(im_size_h_org * hough_rescale)) + 3;
-        auto im_size_w = int(round(im_size_w_org * hough_rescale)) + 3;
-
-        auto linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
-        auto linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, min_hough_points, pixel_res, theta_res, max_distance_pts_line, num_matching_pts_to_use);
-
-        if (linesImg1.size() && linesImg2.size())
-        {
-            topMatchingLines =
-                getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, min_shared_points, inlier_ratio);
-        }
-    }
-
-    return topMatchingLines;
 }

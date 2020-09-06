@@ -167,6 +167,7 @@ int main()
         //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_8POINT);
         
         Mat ret = cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
+        cout << "Mat:" << endl << ret << endl;
 
         ShowImage(imgA);
         return 0;

@@ -1,3 +1,4 @@
+#include "precomp.hpp"
 #include "SFM_finder.hpp"
 #include "matching_lines.hpp"
 #include "sfm_ransac.hpp"
@@ -92,7 +93,6 @@ void SFMEstimatorCallback::computeError( InputArray _m1, InputArray _m2, InputAr
         d1 = m1[i].x*a + m1[i].y*b + c;
 
         err[i] =(float) 0.5 * (sqrt(d1*d1*s1) + sqrt(d2*d2*s2));
-        //err[i] = (double)std::max(d1*d1*s1, d2*d2*s2);
     }
 }
   
@@ -122,18 +122,53 @@ SeparableFundamentalMatFindCommand::SeparableFundamentalMatFindCommand(InputArra
         houghRescale = float(2 * pts1Count) / imSizeHOrg;
     else if (houghRescale > 1) // Only subsample
         houghRescale = 1;
-    isExecuting = false;
 }
 
 
-Mat SeparableFundamentalMatFindCommand::FindMat()
+vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
 {
-    isExecuting = true;
+    houghRescale = houghRescale * 2; // for the first time
+    maxDistancePtsLine = maxDistancePtsLine * 0.5;
 
+    Mat pts1Org = points1;
+    Mat pts2Org = points2;
+    Mat pts1, pts2;
+            
+    vector<top_line> topMatchingLines;
+    // we sample a small subset of features to use in the hough transform, if our sample is too sparse, increase it
+    for (auto i = 0; i < this->topLineRetries && topMatchingLines.size() < 2; i++)
+    {
+        // rescale points and image size for fast line detection
+        houghRescale = houghRescale * 0.5;
+        maxDistancePtsLine = maxDistancePtsLine * 2;
+        pts1 = houghRescale * pts1Org;
+        pts2 = houghRescale * pts2Org;
+        auto im_size_h = int(round(imSizeHOrg * houghRescale)) + 3;
+        auto im_size_w = int(round(imSizeWOrg * houghRescale)) + 3;
+
+        auto linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        auto linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        
+        if (linesImg1.size() && linesImg2.size())
+        {
+            topMatchingLines =
+                getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, minSharedPoints, inlierRatio);
+        }
+    }
+
+    /*if (topMatchingLines.size())
+    {
+        points1 = pts1;
+        points2 = pts2;
+    }*/
+
+    return topMatchingLines;
+}
+
+
+Mat SeparableFundamentalMatFindCommand::FindMat(const vector<top_line> &topMatchingLines)
+{
     Mat f;
-    
-    auto topMatchingLines = FindMatchingLines(imSizeHOrg, imSizeWOrg, points1, points2, topLineRetries, houghRescale, maxDistancePtsLine,
-        minHoughPints, pixelRes, thetaRes, numMatchingPtsToUse, minSharedPoints, inlierRatio);
 
     // We don't have at least one line
     if (!topMatchingLines.size()) return f;
@@ -168,8 +203,29 @@ Mat SeparableFundamentalMatFindCommand::TransformResultMat(Mat mat)
     diag.at<double>(1, 1) = houghRescale;
     diag.at<double>(2, 2) = 1;
 
-    Mat ret = diag * mat;
+    Mat ret = mat * diag;
+    ret = diag * mat;
     return ret;
+}
+
+
+void PrintError(InputArray _points1, InputArray _points2, Mat f, int _inlierThreashold)
+{
+    SFMEstimatorCallback c;
+    Mat err;
+    c.computeError(_points1, _points2, f, err);
+    int inlierCount = 0;
+    float meanErr = 0;
+    for (size_t i = 0; i < err.rows; i++)
+    {
+        if (err.at<float>(i, 0) < _inlierThreashold)
+        {
+            ++inlierCount;
+            meanErr += err.at<float>(i, 0);
+        }
+    }
+    meanErr /= inlierCount;
+    cout << "Error is " << meanErr << " for " << inlierCount << " inliers." << endl;
 }
 
 // pts1 is Mat of shape(X,2)
@@ -180,7 +236,18 @@ Mat cv::separableFundamentalMatrix::findSeparableFundamentalMat(InputArray _poin
 {
     SeparableFundamentalMatFindCommand command(_points1, _points2, _imSizeHOrg, _imSizeWOrg, _inlierRatio, _inlierThreashold, _houghRescale,
         _numMatchingPtsToUse, _pixelRes, _minHoughPints, _thetaRes, _maxDistancePtsLine, _topLineRetries, _minSharedPoints);
-    Mat f = command.FindMat();
-    f = command.TransformResultMat(f);
+
+    auto topMatchingLines = command.FindMatchingLines();
+    
+    Mat f = command.FindMat(topMatchingLines);
+    cout << f << endl;
+    PrintError(_points1, _points2, f, _inlierThreashold);
+
+    //f = command.TransformResultMat(f);
+    //cout << f << endl;
+    //PrintError(_points1, _points2, f, _inlierThreashold);
+    
+
+    //err = Compute
     return f;
 }

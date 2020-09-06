@@ -1,3 +1,4 @@
+#include "precomp.hpp"
 #include "line_homography.hpp"
 
 using namespace cv;
