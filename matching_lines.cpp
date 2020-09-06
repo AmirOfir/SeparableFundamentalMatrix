@@ -80,7 +80,7 @@ array<top_line,2> topTwoLinesWithMaxAngle(const vector<line_info> &lineInfosImg1
     const top_line firstLine = topLines[0];
             
     auto firstLineEq = lineInfosImg1[firstLine.line1_index].line_eq_abc_norm;
-    int lineCount = min(20, (int)topLines.size());
+    
     double maxAngle = -180;
     int maxAngleIx;
     for (int i = 1; i < topLines.size(); i++)
@@ -122,27 +122,49 @@ top_line createTopLine(InputArray _ptsImg1, InputArray _ptsImg2, const vector<Po
 
     // Find inliers, inlier_idx_homography - index of inliers of all the line points
     auto matchingPoints = VecMatchingPoints<double>(matchingPoints1, matchingPoints2);
-    auto lineInliersResult = lineInliersRansac(num_line_ransac_iterations, matchingPoints);
+    auto lineInliersErrors = lineInliersRansac(num_line_ransac_iterations, matchingPoints);
 
-    if (lineInliersResult.inlierIndexes.size() < 4)
+    if (lineInliersErrors.inlierCount < 4)
         return curr;
 
-    auto inlierPoints1 = byIndices<double>(matchingPoints1, lineInliersResult.inlierIndexes);
-    auto inlierPoints2 = byIndices<double>(matchingPoints2, lineInliersResult.inlierIndexes);
-                
-    auto endpoints = intervalEndpoints(inlierPoints1);
-    auto midPointResult = intervalPointClosestToCenter(inlierPoints1, endpoints.firstIdx, endpoints.secondIdx);
+    // Find the model with the longest interval
+    LineInliersModelResult lineInliersResult;
+    vector<Point2d> inlierPoints1, inlierPoints2;
+    IntervalEndpointsResult intervalEndpointsResult;
+    IntervalMidPointResult intervalMidPointResult;
+    intervalEndpointsResult.distance = 0;
+    intervalMidPointResult.minDistance = 0;
+    for (size_t i = 0; i < lineInliersErrors.fittestModelsErrors.size(); i++)
+    {
+        auto currLineInliersResult = modelInliers(lineInliersErrors.fittestModelsErrors[i]);
 
+        auto currInlierPoints1 = byIndices<double>(matchingPoints1, currLineInliersResult.inlierIndexes);
+        auto currInlierPoints2 = byIndices<double>(matchingPoints2, currLineInliersResult.inlierIndexes);
+                
+        auto currEndpoints = intervalEndpoints(currInlierPoints1);
+        auto currMidPointResult = intervalPointClosestToCenter(currInlierPoints1, currEndpoints.firstIdx, currEndpoints.secondIdx);
+
+        if (currMidPointResult.minDistance > intervalMidPointResult.minDistance)
+        {
+            lineInliersResult = currLineInliersResult;
+            inlierPoints1 = currInlierPoints1;
+            inlierPoints2 = currInlierPoints2;
+            intervalEndpointsResult = currEndpoints;
+            intervalMidPointResult = currMidPointResult;
+        }
+
+    }
+    
     curr.num_inliers = (int)lineInliersResult.inlierIndexes.size();
     curr.line_points_1 = inlierPoints1;
     curr.line_points_2 = inlierPoints2;
     curr.line1_index = k;
     curr.line2_index = j;
-    curr.inlier_selected_index = { endpoints.firstIdx, endpoints.secondIdx, midPointResult.midPointIdx };
+    curr.inlier_selected_index = { intervalEndpointsResult.firstIdx, intervalEndpointsResult.secondIdx, intervalMidPointResult.midPointIdx };
     curr.selected_line_points1 = byIndices<double>(inlierPoints1, curr.inlier_selected_index);
     curr.selected_line_points2 = byIndices<double>(inlierPoints2, curr.inlier_selected_index);
-    curr.max_dist = endpoints.distance;
-    curr.min_dist = midPointResult.minDistance;
+    curr.max_dist = intervalEndpointsResult.distance;
+    curr.min_dist = intervalMidPointResult.minDistance;
     curr.homg_err = lineInliersResult.meanError;
 
     return curr;
