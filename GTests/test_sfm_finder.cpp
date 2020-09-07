@@ -259,3 +259,23 @@ TEST(TestSFMEstimatorCallback, FindInliers)
 
     assert_same<float>(err, expected);
 }
+
+TEST(TestSFMCommand, TransformResultMat)
+{
+    double src[] = { -1.01694626e-06,  2.74018975e-05, -4.40466170e-02,
+       -2.72209655e-05, -2.36074706e-06,  4.32982794e-02,
+        2.95308880e-02, -2.63186255e-02,  1.00000000e+00 };
+    Mat srcMat(3, 3, CV_64F, src);
+    SeparableFundamentalMatFindCommand command = SeparableFundamentalMatFindCommand(noArray(), noArray(), 10,10, 0,0,0.6394335511982571, 0,0,0,0,0,0,0);
+    Mat actual = command.TransformResultMat(srcMat);
+    
+    double *actualptr = actual.ptr<double>();
+    double expected[] = { -4.15804173e-07,  1.12039582e-05, -2.81648847e-02,
+       -1.11299795e-05, -9.65251084e-07,  2.76863725e-02,
+        1.88830406e-02, -1.68290121e-02,  1.00000000e+00 };
+    for (size_t i = 0; i < 9; i++)
+    {
+        EXPECT_FLOAT_EQ(actualptr[i], expected[i]);
+    }
+
+}

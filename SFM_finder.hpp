@@ -20,7 +20,7 @@ namespace cv {
 namespace separableFundamentalMatrix {
 Mat findSeparableFundamentalMat(InputArray pts1, InputArray pts2, int im_size_h_org, int im_size_w_org,
     float inlier_ratio = 0.4, int inlier_threshold = 3,
-    float hough_rescale = DEFAULT_HOUGH_RESCALE, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
+    double hough_rescale = DEFAULT_HOUGH_RESCALE, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
     int theta_res = 180, float max_distance_pts_line = 3, int top_line_retries = 2, int min_shared_points = 4);    
 
 class SFMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback
@@ -47,7 +47,7 @@ private:
     int imSizeWOrg;
     float inlierRatio; 
     int inlierThreashold; 
-    float houghRescale; 
+    double houghRescale; 
     int numMatchingPtsToUse; 
     int pixelRes;
     int minHoughPints; 
@@ -60,7 +60,7 @@ public:
     Mat points2;
     int nPoints;
     SeparableFundamentalMatFindCommand(InputArray _points1, InputArray _points2, int _imSizeHOrg, int _imSizeWOrg,
-        float _inlierRatio, int _inlierThreashold, float _houghRescale, int _numMatchingPtsToUse, int _pixelRes,
+        float _inlierRatio, int _inlierThreashold, double _houghRescale, int _numMatchingPtsToUse, int _pixelRes,
         int _minHoughPints, int _thetaRes, float _maxDistancePtsLine, int _topLineRetries, int _minSharedPoints);
             
     ~SeparableFundamentalMatFindCommand()
