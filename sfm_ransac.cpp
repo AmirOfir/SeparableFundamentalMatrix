@@ -3,6 +3,7 @@
 // of this distribution and at http://opencv.org/license.html.
 #include "precomp.hpp"
 #include "sfm_ransac.hpp"
+#include "np_cv_imp.hpp"
 
 using namespace cv;
 using namespace std;
@@ -172,12 +173,27 @@ public:
                     break;
                 }
             }
+            /*double tps[] = {1310.62976074,  558.75189209, 227.07142639,  526.86254883, 1301.15759277,  607.402771  , 495.18673706,  779.19897461, 498.23513794, 1014.88684082};
+            ms1 = Mat(5, 1, ms1.type(), tps);
+            double tps2[] = {887.2119751 , 267.95889282, 95.35410309, 251.5806427 , 883.16918945, 299.68289185, 254.12086487, 385.54486084, 216.70541382, 534.84344482};
+            ms2 = Mat(5, 1, ms1.type(), tps2);*/
 
             nmodels = cb->runKernel( ms1, ms2, model );
             if( nmodels <= 0 )
                 continue;
             CV_Assert( model.rows % nmodels == 0 );
             Size modelSize(model.cols, model.rows/nmodels);
+
+            /*double r[] = { -2.37441776e-06,  3.80198749e-05, -4.60733095e-02, -4.11424902e-05, -7.31080804e-08,  4.56799066e-02, 3.18231839e-02, -2.83058835e-02,  1.00000000e+00 };
+            double *a = model.ptr<double>();
+            int m = 0;
+            for (size_t i = 0; i < 9; i++)
+            {
+                if (abs(r[i] - a[i]) < 0.001)
+                {
+                    ++m;
+               }
+            }*/
 
             for( i = 0; i < nmodels; i++ )
             {
@@ -213,6 +229,101 @@ public:
     }
 
     void setCallback(const Ptr<PointSetRegistrator::Callback>& _cb) CV_OVERRIDE { cb = _cb; }
+
+    bool testEveryCase(InputArray _m1, InputArray _m2, OutputArray _model, OutputArray _mask) const
+    {
+        bool result = false;
+        Mat m1 = _m1.getMat(), m2 = _m2.getMat();
+        Mat err, mask, model, bestModel, ms1, ms2;
+
+        int d1 = m1.channels() > 1 ? m1.channels() : m1.cols;
+        int d2 = m2.channels() > 1 ? m2.channels() : m2.cols;
+        int count = m1.checkVector(d1), count2 = m2.checkVector(d2), maxGoodCount = 0;
+
+        RNG rng((uint64)-1);
+
+        CV_Assert( cb );
+        CV_Assert( confidence > 0 && confidence < 1 );
+
+        CV_Assert( count >= 0 && count2 == count );
+        if( count < modelPoints )
+            return false;
+
+        Mat bestMask0, bestMask;
+
+        if( _mask.needed() )
+        {
+            _mask.create(count, 1, CV_8U, -1, true);
+            bestMask0 = bestMask = _mask.getMat();
+            CV_Assert( (bestMask.cols == 1 || bestMask.rows == 1) && (int)bestMask.total() == count );
+        }
+        else
+        {
+            bestMask.create(count, 1, CV_8U);
+            bestMask0 = bestMask;
+        }
+
+        if( count == modelPoints )
+        {
+            if( cb->runKernel(m1, m2, bestModel) <= 0 )
+                return false;
+            bestModel.copyTo(_model);
+            bestMask.setTo(Scalar::all(1));
+            return true;
+        }
+
+        ms1.create(modelPoints, 1, m1.type());
+        ms2.create(modelPoints, 1, m1.type());
+
+        vector<vector<int>> indices = subsets(count, modelPoints);
+        for (int i = 0; i < indices.size(); i++)
+        {
+            for (size_t k = 0; k < modelPoints; k++)
+            {
+                m1.row(indices[i][k]).copyTo(ms1.row(k));
+                m2.row(indices[i][k]).copyTo(ms2.row(k));
+            }
+            cout << m1 << endl << m2 << endl;
+            /*Mat ms1 = pointVectorToMat(byIndices<_Tp>(m1, indices[i]));
+            Mat ms2 = pointVectorToMat(byIndices<_Tp>(m2, indices[i]));*/
+            
+            int nmodels = cb->runKernel( ms1, ms2, model );
+            if( nmodels <= 0 ) continue;
+            CV_Assert( model.rows % nmodels == 0 );
+            Size modelSize(model.cols, model.rows/nmodels);
+
+            for( i = 0; i < nmodels; i++ )
+            {
+                Mat model_i = model.rowRange( i*modelSize.height, (i+1)*modelSize.height );
+                int goodCount = findInliers( m1, m2, model_i, err, mask, threshold );
+
+                if( goodCount > MAX(maxGoodCount, modelPoints-1) )
+                {
+                    std::swap(mask, bestMask);
+                    model_i.copyTo(bestModel);
+                    maxGoodCount = goodCount;
+                    //niters = RANSACUpdateNumIters( confidence, (double)(count - goodCount)/count, modelPoints, niters );
+                }
+            }
+        }
+
+        if( maxGoodCount > 0 )
+        {
+            if( bestMask.data != bestMask0.data )
+            {
+                if( bestMask.size() == bestMask0.size() )
+                    bestMask.copyTo(bestMask0);
+                else
+                    transpose(bestMask, bestMask0);
+            }
+            bestModel.copyTo(_model);
+            result = true;
+        }
+        else
+            _model.release();
+
+        return result;
+    }
 
     Ptr<PointSetRegistrator::Callback> cb;
     int modelPoints;

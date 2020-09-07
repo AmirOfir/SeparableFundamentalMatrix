@@ -118,41 +118,6 @@ struct LineInliersRansacResult
     vector<vector<double>> fittestModelsErrors;
 };
 
-inline unsigned nChoosek( unsigned n, unsigned k )
-{
-    if (k > n) return 0;
-    if (k * 2 > n) k = n-k;
-    if (k == 0) return 1;
-
-    int result = n;
-    for( int i = 2; i <= k; ++i ) {
-        result *= (n-i+1);
-        result /= i;
-    }
-    return result;
-}
-
-inline void subset_i(vector<vector<size_t>> &v, int curr, int max)
-{
-    for (size_t i = 0; i < v.size(); i++)
-    {
-        v[i].push_back(curr + ((curr + i) % max));
-    }
-}
-
-inline vector<vector<size_t>> subsets(int count, int max, int k)
-{
-    vector<vector<size_t>> ret(count);
-
-    for (size_t i = 0; i < k; i++)
-    {
-        subset_i(ret, i, max);
-    }
-
-    return ret;
-}
-
-
 template <typename _Tp>
 LineInliersRansacResult lineInliersRansac(int numIterations, const VecMatchingPoints<_Tp> &matchingPoints, double inlierTh = 0.35)
 {

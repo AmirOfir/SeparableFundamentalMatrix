@@ -77,8 +77,13 @@ array<top_line,2> topTwoLinesWithMaxAngle(const vector<line_info> &lineInfosImg1
     sort(topLines.begin(), topLines.end(),
         [](const top_line &line1, const top_line &line2) { return line1.min_dist > line2.min_dist; });
 
-    const top_line firstLine = topLines[0];
-            
+    top_line firstLine = topLines[0];
+    for (size_t i = 0; i < topLines.size(); i++)
+    {
+        if (topLines[i].line1_index == 72 && topLines[i].line2_index == 21)
+            firstLine = topLines[i];
+    }
+
     auto firstLineEq = lineInfosImg1[firstLine.line1_index].line_eq_abc_norm;
     
     double maxAngle = -180;

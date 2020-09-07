@@ -54,12 +54,11 @@ private:
     int thetaRes;
     float maxDistancePtsLine;
     int topLineRetries;
-    int minSharedPoints;
+    int minSharedPoints;        
+public:
     Mat points1;
     Mat points2;
     int nPoints;
-            
-public:
     SeparableFundamentalMatFindCommand(InputArray _points1, InputArray _points2, int _imSizeHOrg, int _imSizeWOrg,
         float _inlierRatio, int _inlierThreashold, float _houghRescale, int _numMatchingPtsToUse, int _pixelRes,
         int _minHoughPints, int _thetaRes, float _maxDistancePtsLine, int _topLineRetries, int _minSharedPoints);
@@ -72,7 +71,11 @@ public:
 
     vector<top_line> FindMatchingLines();
 
-    Mat FindMat(const vector<top_line> &topMathingLines);
+    vector<Mat> FindMat(const vector<top_line> &topMathingLines);
+
+    int CountInliers(Mat f);
+
+    Mat FindMatForInliers(Mat mat);
 
     Mat TransformResultMat(Mat mat);
 
