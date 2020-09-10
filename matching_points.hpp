@@ -6,8 +6,7 @@
 #ifndef _OPENCV_MATCHING_POINTS_H_
 #define _OPENCV_MATCHING_POINTS_H_
 
-#include <numeric>
-#include <opencv2/opencv.hpp>
+#include "precomp.hpp"
 #include "np_cv_imp.hpp"
 
 namespace cv { 

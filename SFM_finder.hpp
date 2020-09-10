@@ -3,9 +3,7 @@
 #define _OPENCV_SFM_FINDER_H_
 
 #include "precomp.hpp"
-//
-//#include <opencv2/opencv.hpp>
-
+#include "matching_lines.hpp"
 #include "np_cv_imp.hpp"
 #include "matching_points.hpp"
 #include "line_homography.hpp"

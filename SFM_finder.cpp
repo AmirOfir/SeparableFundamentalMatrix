@@ -1,6 +1,5 @@
 #include "precomp.hpp"
 #include "SFM_finder.hpp"
-#include "matching_lines.hpp"
 #include "sfm_ransac.hpp"
 
 using namespace cv::separableFundamentalMatrix;

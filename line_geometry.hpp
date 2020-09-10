@@ -5,8 +5,7 @@
 #ifndef _OPENCV_LINE_GEOMETRY_H_
 #define _OPENCV_LINE_GEOMETRY_H_
 
-#include <opencv2/opencv.hpp>
-#include <opencv2\core\core_c.h>
+#include "precomp.hpp"
 
 namespace cv {
 namespace separableFundamentalMatrix {

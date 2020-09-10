@@ -5,8 +5,8 @@
 #ifndef _OPENCV_MATCHING_LINES_H_
 #define _OPENCV_MATCHING_LINES_H_
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/xfeatures2d.hpp>
+#include "precomp.hpp"
+
 namespace cv { 
 namespace separableFundamentalMatrix {
 

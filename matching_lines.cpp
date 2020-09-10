@@ -3,7 +3,6 @@
 #include "SFM_finder.hpp"
 #include "np_cv_imp.hpp"
 #include "line_geometry.hpp"
-//#include <opencv2/features2d.hpp>
 
 using namespace cv;
 using namespace std;

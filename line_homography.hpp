@@ -6,7 +6,7 @@
 #ifndef _OPENCV_LINE_HOMOGRAPHY_H_
 #define _OPENCV_LINE_HOMOGRAPHY_H_
 
-#include <opencv2/opencv.hpp>
+#include "precomp.hpp"
 #include "np_cv_imp.hpp"
 #include "matching_points.hpp"
 

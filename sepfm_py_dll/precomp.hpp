@@ -2,14 +2,19 @@
 #ifndef __OPENCV_PRECOMP_H__
 #define __OPENCV_PRECOMP_H__
 
-#include <opencv2/core.hpp>
-#include <opencv2/core/core_c.h>
-#include <opencv2/imgproc.hpp>
-//#include <opencv2/calib3d.hpp>
-//#include "opencv2/sepfm.hpp"
-//#include "opencv2/opencv_modules.hpp"
+//#include <opencv2/core.hpp>
+//#include <opencv2/core/core_c.h>
+//#include <opencv2/imgproc.hpp>
 #include <vector>
 #include <numeric>
+
+namespace cv {
+    class Point3d
+    {
+    pubilc:
+        double 
+    };
+}
 
 namespace cv {
 namespace separableFundamentalMatrix {
