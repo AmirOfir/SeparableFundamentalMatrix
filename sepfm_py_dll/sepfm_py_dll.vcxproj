@@ -22,19 +22,40 @@
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\line_homography.cpp" />
-    <ClCompile Include="..\matching_lines.cpp" />
-    <ClCompile Include="..\SFM_finder.cpp" />
-    <ClCompile Include="..\sfm_ransac.cpp" />
-    <ClInclude Include="..\line_geometry.hpp" />
-    <ClInclude Include="..\line_homography.hpp" />
-    <ClInclude Include="..\matching_lines.hpp" />
-    <ClInclude Include="..\matching_points.hpp" />
-    <ClInclude Include="..\np_cv_imp.hpp" />
-    <ClInclude Include="..\pointset_registrator.hpp" />
-    <ClInclude Include="..\SFM_finder.hpp" />
     <ClInclude Include="include\cv_cpu_config.h" />
+    <ClInclude Include="line_geometry.hpp" />
+    <ClInclude Include="line_homography.hpp" />
+    <ClInclude Include="matching_lines.hpp" />
+    <ClInclude Include="matching_points.hpp" />
+    <ClInclude Include="np_cv_imp.hpp" />
+    <ClInclude Include="opencvlight\cvdef.h" />
+    <ClInclude Include="opencvlight\cv_cpu_dispatch.h" />
+    <ClInclude Include="opencvlight\inputarray.hpp" />
+    <ClInclude Include="opencvlight\mat.hpp" />
+    <ClInclude Include="opencvlight\svd.hpp" />
+    <ClInclude Include="opencvlight\traits.h" />
+    <ClInclude Include="opencvlight\types.hpp" />
+    <ClInclude Include="pointset_registrator.hpp" />
     <ClInclude Include="precomp.hpp" />
+    <ClInclude Include="SFM_finder.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="line_homography.cpp" />
+    <ClCompile Include="matching_lines.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="np_cv_imp.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="opencv2\alloc.cpp" />
+    <ClCompile Include="opencvlight\matrix.cpp" />
+    <ClCompile Include="opencvlight\types.cpp" />
+    <ClCompile Include="SFM_finder.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="sfm_ransac.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -91,6 +112,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)\bin\$(Configuration)$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)\obj\$(Configuration)$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -103,12 +126,14 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;SEPFMPYDLL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>precomp.hpp</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
