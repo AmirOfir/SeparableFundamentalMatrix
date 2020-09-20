@@ -128,6 +128,7 @@
     <ClInclude Include="pointset_registrator.hpp" />
     <ClInclude Include="precomp.hpp" />
     <ClInclude Include="SFM_finder.hpp" />
+    <ClInclude Include="sfm_ransac.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
