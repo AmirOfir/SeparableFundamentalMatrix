@@ -116,7 +116,7 @@ public:
         return false;
     }
 
-    bool run(InputArray _m1, InputArray _m2, OutputArray _model, OutputArray _mask) const CV_OVERRIDE
+    bool run(InputArray _m1, InputArray _m2, OutputArray _model, OutputArray _mask, int &inliers) const CV_OVERRIDE
     {
         bool result = false;
         Mat m1 = _m1.getMat(), m2 = _m2.getMat();
@@ -172,27 +172,12 @@ public:
                     break;
                 }
             }
-            /*double tps[] = {1310.62976074,  558.75189209, 227.07142639,  526.86254883, 1301.15759277,  607.402771  , 495.18673706,  779.19897461, 498.23513794, 1014.88684082};
-            ms1 = Mat(5, 1, ms1.type(), tps);
-            double tps2[] = {887.2119751 , 267.95889282, 95.35410309, 251.5806427 , 883.16918945, 299.68289185, 254.12086487, 385.54486084, 216.70541382, 534.84344482};
-            ms2 = Mat(5, 1, ms1.type(), tps2);*/
 
             nmodels = cb->runKernel( ms1, ms2, model );
             if( nmodels <= 0 )
                 continue;
             CV_Assert( model.rows % nmodels == 0 );
             Size modelSize(model.cols, model.rows/nmodels);
-
-            /*double r[] = { -2.37441776e-06,  3.80198749e-05, -4.60733095e-02, -4.11424902e-05, -7.31080804e-08,  4.56799066e-02, 3.18231839e-02, -2.83058835e-02,  1.00000000e+00 };
-            double *a = model.ptr<double>();
-            int m = 0;
-            for (size_t i = 0; i < 9; i++)
-            {
-                if (abs(r[i] - a[i]) < 0.001)
-                {
-                    ++m;
-               }
-            }*/
 
             for( i = 0; i < nmodels; i++ )
             {
@@ -220,6 +205,7 @@ public:
             }
             bestModel.copyTo(_model);
             result = true;
+            inliers = maxGoodCount;
         }
         else
             _model.release();

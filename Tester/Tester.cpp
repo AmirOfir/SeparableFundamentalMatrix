@@ -116,6 +116,14 @@ void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string
 
 int main()
 {
+    int sizes[] = { 3,5,7 };
+    Mat m3 = Mat::zeros(3, sizes, CV_8U);
+    auto p = m3.data;
+    m3.at<uchar>(0, 0, 0) = 255;
+    m3.at<uchar>(0, 0, 1) = 255;
+    m3.at<uchar>(0, 1, 0) = 255;
+    m3.at<uchar>(0, 0, 1) = 255;
+    m3.at<uchar>(1, 0, 0) = 255;
     vector<tuple<string, string, string, string, float>> example_files = 
     {
         {
@@ -164,13 +172,36 @@ int main()
         auto ptsBVec = convertToVectorOfPoints(ptsB);
         Mat mask;
         
-        //Mat ret = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_8POINT);
+        Mat retCV = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_RANSAC);
+        cout << retCV << endl;
+        cv::separableFundamentalMatrix::SeparableFundamentalMatFindCommand command
+            (ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width, 0.4, 3, -1, 150, 4, 4, 180, 3, 2, 4);
+
+        auto topMatchingLines = command.FindMatchingLines();
+        
+        int bestInliersCount = 0;
+        Mat bestInliersMat;
+        for (auto topLine: topMatchingLines)
+        {
+            Mat m;
+            int i;
+            if (command.FindMat(topLine, m, i))
+            {
+                if (i > bestInliersCount)
+                {
+                    bestInliersCount = i;
+                    bestInliersMat = m;
+                }
+            }
+        }
+
+    
+        bestInliersMat = command.TransformResultMat(bestInliersMat);
+
         
         Mat ret = cv::separableFundamentalMatrix::findSeparableFundamentalMat(ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width);
         cout << "Mat:" << endl << ret << endl;
 
-        ShowImage(imgA);
-        return 0;
     }
     /*
 

@@ -23,7 +23,7 @@ Mat createHeatmap(InputArray ptsImg1, InputArray ptsImg2, const vector<line_info
     // Create heatmap
     const int heatmapSize[] = { (int)lineInfosImg1.size(), (int)lineInfosImg2.size(), ptsImg1.size().height };
     Mat heatmap = Mat::zeros(3, heatmapSize, CV_8U);
-
+    
     // Fill by first lines
     for (auto &lineInfo : lineInfosImg1)
     {
@@ -329,24 +329,79 @@ line_info createLineInfo(Mat pts, const vector<_Tp> &points_intersection, _Tp ma
     return ret;
 }
 
+void getLine(double x1, double y1, double x2, double y2, double &a, double &b, double &c)
+{
+       // (x- p1X) / (p2X - p1X) = (y - p1Y) / (p2Y - p1Y) 
+       a = y1 - y2; // Note: this was incorrectly "y2 - y1" in the original answer
+       b = x2 - x1;
+       c = x1 * y2 - x2 * y1;
+}
+
 vector<line_info> cv::separableFundamentalMatrix::getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
     int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use)
 {
-    Mat ptsRounded = pts.clone();
-    ptsRounded.convertTo(ptsRounded, CV_32S);
+    //vector<Point2d> points;
+    //points.reserve(pts.size().height)
+    //double *ptr = (double*)pts.data;
+    //for (int addedCount = 0; addedCount < num_matching_pts_to_use; ++addedCount)
+    //{
+    //    bw_img.at<uint8_t>((int)ptsptr[1], (int)ptsptr[0]) = (unsigned short)255;
+    //    ptsptr += 2;
+    //}
+    //
+    ////vector<line_info> lineInfos;
 
-    Mat bw_img = Mat::zeros(im_size_h, im_size_w, CV_8U);
-    num_matching_pts_to_use = min(ptsRounded.size().height, num_matching_pts_to_use);
-    for (int addedCount = 0; addedCount < num_matching_pts_to_use; ++addedCount)
+    //for (int firstPoint = 0; firstPoint < pts.size().height - 3; ++firstPoint)
+    //{
+    //    for (int secondPoint = firstPoint + 1; secondPoint < pts.size().height - 2; ++secondPoint)
+    //    {
+    //        double a, b, c;
+    //        //getLine(pts)
+    //        /*double a = Q.second - P.second; 
+    //        double b = P.first - Q.first; 
+    //        double c = a*(P.first) + b*(P.second); 
+
+    //        line_info curr;
+    //        curr.line_eq_abc*/
+
+    //    }
+    //}
+
+
+
+    double *ptsptr = (double*)pts.data;
+    num_matching_pts_to_use = min(pts.size().height, num_matching_pts_to_use);
+
+    // Find the edge points of the chosen points
+    vector<Point2f> points;
+    int minX = im_size_h, minY = im_size_w, maxX = im_size_h, maxY = im_size_w;
+    for (int i = 0; i < num_matching_pts_to_use; ++i)
     {
-        int x0 = ptsRounded.at<int>(addedCount, 1), x1 = ptsRounded.at<int>(addedCount, 0);
-        bw_img.at<uint8_t>(x0, x1) = (unsigned short)255;
+        Point2f curr( (int)ptsptr[1], (int)ptsptr[0] );
+        ptsptr += 2;
+
+        if (curr.x < minX)
+            minX = curr.x;
+        if (curr.y < minY)
+            minY = curr.y;
+        if (curr.x > maxX)
+            maxX = curr.x;
+        if (curr.y > maxY)
+            maxY = curr.y;
+        points.push_back(curr);
+    }
+
+    Mat bw_img = Mat::zeros(maxX-minX, maxY-minY, CV_8U);
+    for (int i = 0; i < num_matching_pts_to_use; ++i)
+    {
+        bw_img.at<uint8_t>(points[i].x-minX, points[i].y-minY) = (unsigned short)255;
     }
 
     vector<Vec2f> houghLines;
     cv::HoughLines(bw_img, houghLines, pixel_res, CV_PI / theta_res, min_hough_points);
 
     vector<line_info> lineInfos;
+    return lineInfos;
     int lineIndex = 0;
     for (auto l : houghLines)
     {

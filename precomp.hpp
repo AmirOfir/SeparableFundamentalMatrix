@@ -10,6 +10,8 @@
 //#include "opencv2/opencv_modules.hpp"
 #include <vector>
 #include <numeric>
+#include <future>
+#include <fstream>
 
 namespace cv {
 namespace separableFundamentalMatrix {

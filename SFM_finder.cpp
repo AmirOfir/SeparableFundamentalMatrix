@@ -1,7 +1,7 @@
 #include "precomp.hpp"
 #include "SFM_finder.hpp"
 #include <iostream>
-//#include "sfm_ransac.hpp"
+#include "sfm_ransac.hpp"
 
 using namespace cv::separableFundamentalMatrix;
 
@@ -145,8 +145,15 @@ vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
         auto im_size_h = int(round(imSizeHOrg * houghRescale)) + 3;
         auto im_size_w = int(round(imSizeWOrg * houghRescale)) + 3;
 
-        auto linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
-        auto linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        getHoughLines(pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        getHoughLines(pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        auto a1 = std::async(getHoughLines, pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        auto a2 = std::async(getHoughLines, pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        a1.wait();
+        a2.wait();
+        
+        auto linesImg1 = a1.get();
+        auto linesImg2 = a2.get();
         
         if (linesImg1.size() && linesImg2.size())
         {
@@ -164,34 +171,25 @@ vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
     return topMatchingLines;
 }
 
-vector<Mat> SeparableFundamentalMatFindCommand::FindMat(const vector<top_line> &topMatchingLines)
-{
-    vector<Mat> ret;
-
-    // We don't have at least one line
-    if (!topMatchingLines.size()) return ret;
-    
+bool SeparableFundamentalMatFindCommand::FindMat(const top_line &topMatchingLine, Mat &mat, int &inliers)
+{   
     int maxIterations = int((log(0.01) / log(1 - pow(inlierRatio, 5)))) + 1;
 
     Ptr<SFMEstimatorCallback> cb = makePtr<SFMEstimatorCallback>();
-    int result;
+ 
+    Mat mask;
+    Mat f = Mat(3, 3, CV_64F);
 
-    for (auto &topLine : topMatchingLines)
+    Mat line_x1n = Mat(topMatchingLine.selected_line_points1);
+    Mat line_x2n = Mat(topMatchingLine.selected_line_points2);
+    cb->setFixedMatrices(line_x1n, line_x2n);
+    bool result = createRANSACPointSetRegistrator(cb, 5, 3., 0.99, maxIterations)->run(points1, points2, f, mask, inliers);
+
+    if (result)
     {
-        Mat mask;
-        Mat f = Mat(3, 3, CV_64F);
-
-        Mat line_x1n = Mat(topLine.selected_line_points1);
-        Mat line_x2n = Mat(topLine.selected_line_points2);
-        cb->setFixedMatrices(line_x1n, line_x2n);
-        result = createRANSACPointSetRegistrator(cb, 5, 3., 0.99, maxIterations)->run(points1, points2, f, mask);
-
-        if (result > 0)
-        {
-            ret.push_back(f);
-        }
+        f.copyTo(mat);
     }
-    return ret;
+    return result;
 }
 
 int SeparableFundamentalMatFindCommand::CountInliers(Mat f)
@@ -293,16 +291,19 @@ Mat cv::separableFundamentalMatrix::findSeparableFundamentalMat(InputArray _poin
 
     auto topMatchingLines = command.FindMatchingLines();
     
-    vector<Mat> matrices = command.FindMat(topMatchingLines);
     int bestInliersCount = 0;
     Mat bestInliersMat;
-    for (auto m: matrices)
+    for (auto topLine: topMatchingLines)
     {
-        int inliersCount = command.CountInliers(m);
-        if (bestInliersCount < inliersCount)
+        Mat m;
+        int i;
+        if (command.FindMat(topLine, m, i))
         {
-            bestInliersCount = inliersCount;
-            bestInliersMat = m;
+            if (i > bestInliersCount)
+            {
+                bestInliersCount = i;
+                bestInliersMat = m;
+            }
         }
     }
 

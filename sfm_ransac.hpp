@@ -7,31 +7,15 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d/calib3d_c.h>
-#include "SFM_finder.hpp"
+
 #include "pointset_registrator.hpp"
 
 namespace cv
 {
-    namespace separableFundamentalMatrix
-    {
-        struct FastFundamentalMatrixRansacResult
-        {
 
-        };
+Ptr<PointSetRegistrator> createRANSACPointSetRegistrator(const Ptr<PointSetRegistrator::Callback>& _cb,
+    int _modelPoints, double _threshold=0, double _confidence=0.99, int _maxIters=1000);
 
-        
-        class SFMRansac
-        {
-        public:
-            static void h_coordinates(InputOutputArray _pts);
-            static Mat prepareDataForRansac(InputArray _pts1, InputArray _pts2);
-            static vector<tuple<Mat,Mat>> prepareLinesForRansac(const vector<top_line> &topMatchingLines);
-            FastFundamentalMatrixRansacResult fastFundamentalMatrixRansac(uint maxNumIterations, Mat data,
-                int inlier_threshold, const vector<Mat> &arrlines);
-        };
-
-        
-    }
 }
 
 #endif // !_OPENCV_SFM_RANSAC_H_
