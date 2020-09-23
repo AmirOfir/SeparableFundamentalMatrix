@@ -8,7 +8,7 @@ using namespace cv;
 using namespace std;
 using namespace cv::separableFundamentalMatrix;
 
-Mat createHeatmap(InputArray ptsImg1, InputArray ptsImg2, const vector<line_info> &lineInfosImg1, const vector<line_info> &lineInfosImg2)
+Mat cv::separableFundamentalMatrix::createHeatmap(InputArray ptsImg1, InputArray ptsImg2, const vector<line_info> &lineInfosImg1, const vector<line_info> &lineInfosImg2)
 {
     /*
     pts_lines         = np.zeros((len(pts1), len(lines_info_img1), len(lines_info_img2)))
@@ -174,41 +174,11 @@ top_line createTopLine(InputArray _ptsImg1, InputArray _ptsImg2, const vector<Po
     return curr;
 }
 
-vector<top_line> cv::separableFundamentalMatrix::getTopMatchingLines(InputArray _ptsImg1, InputArray _ptsImg2, const vector<line_info> &lineInfosImg1,
-    const vector<line_info> &lineInfosImg2, int minSharedPoints, double inlierRatio)
+vector<top_line> cv::separableFundamentalMatrix::getTopMatchingLines(
+    InputArray _ptsImg1, InputArray _ptsImg2, 
+    const vector<line_info> &lineInfosImg1, const vector<line_info> &lineInfosImg2, 
+    const vector<Point3i> &sharedPoints, int minSharedPoints, double inlierRatio)
 {
-
-    // Create a heatmap between points of each line
-    Mat heatmap = createHeatmap(_ptsImg1, _ptsImg2, lineInfosImg1, lineInfosImg2);
-
-    // Remove all entries which does not have two matching lines (pts_lines[pts_lines<2] =0)
-    heatmap.setTo(0, heatmap < 2);
-
-    // Sum across points' index, this gives us how many shared points for each pair of lines
-    Mat hough_pts;
-    reduceSum3d<uchar, int>(heatmap, hough_pts, (int)CV_32S);
-
-    // Use voting to find out which lines shares points
-    // Convert to a list where each entry is 1x3: the number of shared points for each pair of line and their indices
-    auto num_shared_points_vote = indices<int>(hough_pts);
-
-    //  Delete all non-relevent entries: That have minSharedPoints for each side (multiply by two - one for left line and one for right line).
-    // Note: This could be done only on the x column but the python code does the same
-    num_shared_points_vote.erase(
-        std::remove_if(num_shared_points_vote.begin(), num_shared_points_vote.end(), [minSharedPoints](const Point3i p) {
-            return (bool)(p.x < minSharedPoints * 2 || p.y < minSharedPoints * 2 || p.z < minSharedPoints * 2);
-            }), num_shared_points_vote.end()
-                );
-
-    // Sort the entries (in reverse order)
-    // Note: could've sorted them by x only, but the python code sorted like that
-    //std::sort(num_shared_points_vote.rbegin(), num_shared_points_vote.rend(), lexicographicalSort3d<int>);
-    std::sort(num_shared_points_vote.begin(), num_shared_points_vote.end(), 
-        [](Point3i &a, Point3i &b)
-        {
-            return a.x > b.x || (a.x == b.x && a.y < b.y) || (a.x == b.x && a.y == b.y && a.z < b.z);
-        });
-
     // For each matching points on the matching lines,
     // project the shared points to be exactly on the line
     // start with the lines that shared the highest number of points, so we can do top-N
@@ -216,11 +186,11 @@ vector<top_line> cv::separableFundamentalMatrix::getTopMatchingLines(InputArray 
     int num_line_ransac_iterations = int((log(0.01) / log(1 - pow(inlierRatio, 3)))) + 1;
     
     // Go over the top lines with the most number of shared points, project the points, store by the matching indices of the pair of lines
-    int num_sorted_lines = min((int)num_shared_points_vote.size(), 50);
+    int num_sorted_lines = min((int)sharedPoints.size(), 50);
     top_line topLines[50];
     for (size_t n = 0; n < num_sorted_lines; n++)
     {
-        topLines[n] = createTopLine(_ptsImg1, _ptsImg2, num_shared_points_vote, 
+        topLines[n] = createTopLine(_ptsImg1, _ptsImg2, sharedPoints, 
             lineInfosImg1, lineInfosImg2, n, num_line_ransac_iterations);
     }
     /*parallel_for_(Range(0, num_sorted_lines), [&](const Range& range) {

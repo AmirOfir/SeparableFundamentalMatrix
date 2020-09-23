@@ -142,24 +142,55 @@ vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
         maxDistancePtsLine = maxDistancePtsLine * 2;
         pts1 = houghRescale * pts1Org;
         pts2 = houghRescale * pts2Org;
+
         auto im_size_h = int(round(imSizeHOrg * houghRescale)) + 3;
         auto im_size_w = int(round(imSizeWOrg * houghRescale)) + 3;
 
-        getHoughLines(pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
-        getHoughLines(pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
-        auto a1 = std::async(getHoughLines, pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
-        auto a2 = std::async(getHoughLines, pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
-        a1.wait();
-        a2.wait();
+        vector<line_info> linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        vector<line_info> linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        if (!linesImg1.size() || !linesImg2.size())
+            continue;
         
-        auto linesImg1 = a1.get();
-        auto linesImg2 = a2.get();
-        
-        if (linesImg1.size() && linesImg2.size())
+        // Create a heatmap between points of each line
+        Mat heatmap = createHeatmap(pts1, pts2, linesImg1, linesImg2);
+
+        // Remove all entries which does not have two matching lines (pts_lines[pts_lines<2] =0)
+        heatmap.setTo(0, heatmap < 2);
+
+        // Sum across points' index, this gives us how many shared points for each pair of lines
+        Mat houghPts;
+        reduceSum3d<uchar, int>(heatmap, houghPts, (int)CV_32S);
+
+        heatmap.release();
+
+        // Use voting to find out which lines shares points
+        // Convert to a list where each entry is 1x3: the number of shared points for each pair of line and their indices
+        vector<Point3i> sharedPoints = indices<int>(houghPts);
+
+        //  Delete all non-relevent entries: 
+        // That have minSharedPoints for each side (multiply by two - one for left line and one for right line).
+        // Note: This could be done only on the x column but the python code does the same
+        sharedPoints.erase(
+            std::remove_if(sharedPoints.begin(), sharedPoints.end(), [&](const Point3i p) {
+                return (bool)(p.x < minSharedPoints * 2 || p.y < minSharedPoints * 2 || p.z < minSharedPoints * 2);
+            }), sharedPoints.end()
+        );
+
+        if (!sharedPoints.size())
+            continue;
+
+        // Sort the shared points (in reverse order)
+        // Note: could've sorted them by x only, but the python code sorted like that
+        //std::sort(num_shared_points_vote.rbegin(), num_shared_points_vote.rend(), lexicographicalSort3d<int>);
+        std::sort(sharedPoints.begin(), sharedPoints.end(), 
+        [](Point3i &a, Point3i &b)
         {
-            topMatchingLines =
-                getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, minSharedPoints, inlierRatio);
-        }
+            return a.x > b.x || (a.x == b.x && a.y < b.y) || (a.x == b.x && a.y == b.y && a.z < b.z);
+        });
+
+        topMatchingLines =
+            getTopMatchingLines(pts1, pts2, linesImg1, linesImg2, sharedPoints, minSharedPoints, inlierRatio);
+        
     }
 
     if (topMatchingLines.size())
