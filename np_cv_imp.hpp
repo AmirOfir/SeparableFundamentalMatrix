@@ -1,7 +1,3 @@
-// This file is part of OpenCV project.
-// It is subject to the license terms in the LICENSE file found in the top-level directory
-// of this distribution and at http://opencv.org/license.html.
-
 
 #ifndef _OPENCV_NP_CV_IMP_H_
 #define _OPENCV_NP_CV_IMP_H_
@@ -318,7 +314,6 @@ inline vector<vector<int>> subsets(int n, int k)
     vector<vector<int>> ret;
     unsigned int count = nChoosek(n, k);
     vector<int> curr(k);
-    //std::iota (curr.begin(), curr.end(), 0); // Fill with 0, 1, ..., 99.
     
     for (int i = 0; i < k; i++)
     {

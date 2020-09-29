@@ -13,7 +13,8 @@ namespace separableFundamentalMatrix {
 using namespace cv;
 using namespace std;
 
-vector<line_info> getHoughLines(Mat pts, const int im_size_w, const int im_size_h, int min_hough_points,
+vector<line_info> getHoughLines(Mat pts, 
+    int im_size_w, int im_size_h, int min_hough_points,
     int pixel_res, int theta_res, double max_distance, int num_matching_pts_to_use);
     
 vector<top_line> getTopMatchingLines(

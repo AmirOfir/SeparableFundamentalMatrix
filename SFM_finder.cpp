@@ -33,7 +33,6 @@ void SFMEstimatorCallback::setFixedMatrices(InputArray _m1, InputArray _m2)
 {
     _m1.getMat().convertTo(fixed1, CV_64F);
     _m2.getMat().convertTo(fixed2, CV_64F);
-    //cout << _m1.getMat() << endl << fixed1 << endl << _m2.getMat() << fixed2 << endl;
 }
 
 bool SFMEstimatorCallback::checkSubset( InputArray _ms1, InputArray _ms2, int count ) const
@@ -48,7 +47,6 @@ int SFMEstimatorCallback::runKernel( InputArray _m1, InputArray _m2, OutputArray
     cv::vconcat(fixed1, m1, m1);
     cv::vconcat(fixed2, m2, m2);
 
-    //cout << m1 << endl << m2 << endl;
     Mat F = cv::findFundamentalMat(m1, m2, FM_8POINT);
     
     if (!F.empty() && F.data[0] != NULL)
@@ -123,7 +121,6 @@ SeparableFundamentalMatFindCommand::SeparableFundamentalMatFindCommand(InputArra
         houghRescale = 1;
 }
 
-
 vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
 {
     houghRescale = houghRescale * 2; // for the first time
@@ -142,15 +139,16 @@ vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
         maxDistancePtsLine = maxDistancePtsLine * 2;
         pts1 = houghRescale * pts1Org;
         pts2 = houghRescale * pts2Org;
-
+        
         auto im_size_h = int(round(imSizeHOrg * houghRescale)) + 3;
         auto im_size_w = int(round(imSizeWOrg * houghRescale)) + 3;
-
+        
         vector<line_info> linesImg1 = getHoughLines(pts1, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
         vector<line_info> linesImg2 = getHoughLines(pts2, im_size_w, im_size_h, minHoughPints, pixelRes, thetaRes, maxDistancePtsLine, numMatchingPtsToUse);
+        
         if (!linesImg1.size() || !linesImg2.size())
             continue;
-        
+
         // Create a heatmap between points of each line
         Mat heatmap = createHeatmap(pts1, pts2, linesImg1, linesImg2);
 
@@ -201,6 +199,7 @@ vector<top_line> SeparableFundamentalMatFindCommand::FindMatchingLines()
 
     return topMatchingLines;
 }
+
 
 bool SeparableFundamentalMatFindCommand::FindMat(const top_line &topMatchingLine, Mat &mat, int &inliers)
 {   
@@ -261,8 +260,8 @@ Mat SeparableFundamentalMatFindCommand::FindMatForInliers(Mat mat)
     }
 
     // Create matrices with the inliers
-    Mat p1;// (inlierCount, 2, points1.type());
-    Mat p2;// (inlierCount, 2, points1.type());
+    Mat p1;
+    Mat p2;
 
     for (size_t i = 0; i < err.rows; i++)
     {
@@ -274,6 +273,7 @@ Mat SeparableFundamentalMatFindCommand::FindMatForInliers(Mat mat)
     }
     points1 = p1;
     points2 = p2;
+
     // Compute fundamental matrix
     Mat f = cv::findFundamentalMat(p1, p2, noArray(), FM_8POINT);
     return f;
