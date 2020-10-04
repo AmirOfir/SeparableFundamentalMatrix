@@ -7,7 +7,11 @@ x64/
 *.filters
 *.user
 /packages/Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0
-/pysfm/build
 /pysfm
-/sepfm_py_dll/bin/Debugx64
-/sepfm_py_dll/obj/Debugx64
+/pysfm
+/sepfm_py_dll
+build/
+*.egg-info/
+__pycache__
+dist/
+.vscode/
