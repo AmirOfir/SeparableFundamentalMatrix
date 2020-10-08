@@ -15,3 +15,4 @@ build/
 __pycache__
 dist/
 .vscode/
+sepfm_py_dll_tryout/
