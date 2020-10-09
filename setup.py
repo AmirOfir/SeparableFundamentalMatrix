@@ -4,7 +4,7 @@ from setuptools import setup, Extension
 import numpy
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
-sources = ['python_entry.cpp', 'line_homography.cpp', 'matching_lines.cpp', 'SFM_finder.cpp', 'sfm_ransac.cpp']
+sources = ['python_entry.cpp', 'line_homography.cpp', 'matching_lines.cpp', 'SFM_finder.cpp', 'sfm_ransac.cpp', "fm_finder.cpp" ]
 
 # site_packages_dir = numpy.__file__[:numpy.__file__.index('site-packages')+13]
 

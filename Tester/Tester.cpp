@@ -5,39 +5,11 @@
 #include <fstream>
 #include <type_traits>
 #include "SFM_finder.hpp"
+#include "fm_finder.hpp"
 
 using namespace cv;
 using namespace cv::separableFundamentalMatrix;
 using namespace std;
-
-int testOpenCVVideo()
-{
-    VideoCapture cap(0);
-    if (!cap.isOpened())
-        return -1;
-    while (true)
-    {
-        Mat frame;
-        cap >>frame;
-        imshow("Webcam frame", frame);
-        
-        if (waitKey(30) >= 0)
-            break;
-    }
-    return 0;
-}
-void ShowImage()
-{
-    cv::String fileName;
-    fileName = R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1a.jpg)";
-    auto mat = imread(fileName);
-    imshow("M", mat); waitKey(0); destroyAllWindows();
-}
-
-void ShowImage(const cv::Mat &mat)
-{
-    imshow("M", mat); waitKey(0); destroyAllWindows();
-}
 
 string shape(const cv::Mat &mat)
 {
@@ -86,84 +58,84 @@ vector<Point2d> convertToVectorOfPoints(const vector<vector<RealType>> &vec, int
         ret.push_back(Point2d(c.at(0), c.at(1)));
     return ret;
 }
- 
-void LoadImages(string img1_name, string img2_name, string imgA_pts_name, string imgB_pts_name, float scale_factor, 
+
+struct ExampleFile
+{
+    string img1_name;
+    string img2_name; 
+    string imgA_pts_name; 
+    string imgB_pts_name;
+    float scale_factor;
+    ExampleFile(string baseFolder, string _img1_name, string _img2_name, string _imgA_pts_name, string _imgB_pts_name, float _scale_factor)
+        : img1_name(baseFolder + _img1_name), img2_name(baseFolder + _img2_name), 
+        imgA_pts_name(baseFolder + _imgA_pts_name), imgB_pts_name(baseFolder + _imgB_pts_name), scale_factor(_scale_factor)
+    { }
+};
+
+
+void LoadImages(ExampleFile exampleFile, 
     Mat &img1, Mat &img2, vector<vector<double>> &ptsA, vector<vector<double>> &ptsB)
 {
-    auto img1c = imread(img1_name); // queryImage
-    auto img2c = imread(img2_name); // trainImage
+    //string img1_name, string img2_name, string imgA_pts_name, string imgB_pts_name, float scale_factor
+    auto img1c = imread(exampleFile.img1_name); // queryImage
+    auto img2c = imread(exampleFile.img2_name); // trainImage
     
-    if (scale_factor < 1)
+    if (exampleFile.scale_factor < 1)
     {
         Mat tmp;
-        cout << "Image shape before scaling " << shape(img1c) << endl;
-        resize(img1c, tmp, Size(), scale_factor, scale_factor, cv::INTER_AREA);
+        std::cout << "Image shape before scaling " << shape(img1c) << endl;
+        resize(img1c, tmp, Size(), exampleFile.scale_factor, exampleFile.scale_factor, cv::INTER_AREA);
         img1c = tmp;
 
-        resize(img2c, tmp, Size(), scale_factor, scale_factor, cv::INTER_AREA);
+        resize(img2c, tmp, Size(), exampleFile.scale_factor, exampleFile.scale_factor, cv::INTER_AREA);
         img2c = tmp;
     }
-    cout << "Image shape after scaling " << shape(img1c) << endl;
+    std::cout << "Image shape after scaling " << shape(img1c) << endl;
 
     cv::cvtColor(img1c, img1c, cv::COLOR_BGR2GRAY);
     cv::cvtColor(img2c, img2c, cv::COLOR_BGR2GRAY);
 
-    ptsA = parseCSV(imgA_pts_name);
-    ptsB = parseCSV(imgB_pts_name);
+    ptsA = parseCSV(exampleFile.imgA_pts_name);
+    ptsB = parseCSV(exampleFile.imgB_pts_name);
     img1 = img1c;
     img2 = img2c;
 }
 
-int main()
+
+int main(int argc, char *argv[])
 {
-    int sizes[] = { 3,5,7 };
-    Mat m3 = Mat::zeros(3, sizes, CV_8U);
-    auto p = m3.data;
-    m3.at<uchar>(0, 0, 0) = 255;
-    m3.at<uchar>(0, 0, 1) = 255;
-    m3.at<uchar>(0, 1, 0) = 255;
-    m3.at<uchar>(0, 0, 1) = 255;
-    m3.at<uchar>(1, 0, 0) = 255;
-    vector<tuple<string, string, string, string, float>> example_files = 
+    std::string argv_str(argv[0]);
+    std::string base;
+    if (argv_str.find_last_of("/") == -1)
+        base = argv_str.substr(0, argv_str.find_last_of("\\") + 1);
+    else
+        base = argv_str.substr(0, argv_str.find_last_of("/") + 1);
+
+    vector<ExampleFile> exampleFiles = 
     {
         {
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1a.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1b.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts1a.csv)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts1b.csv)",
-            0.5
+            base, R"(im1a.jpg)", R"(im1b.jpg)", R"(pts1a.csv)", R"(pts1b.csv)", 0.5
         },
         {
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im2a.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im2b.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts2a.csv)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts2b.csv)", 1
+            base, R"(im2a.jpg)", R"(im2b.jpg)", R"(pts2a.csv)", R"(pts2b.csv)", 1
         },
         {
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im3a.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im3b.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts3a.csv)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts3b.csv)", 1
+            base, R"(im3a.jpg)", R"(im3b.jpg)", R"(pts3a.csv)", R"(pts3b.csv)", 1
         },
         {
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im4a.png)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im4b.png)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts4a.csv)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts4b.csv)", 0.3
+            base, R"(im4a.png)", R"(im4b.png)", R"(pts4a.csv)", R"(pts4b.csv)", 0.3
         },
         {
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im5a.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im5b.jpg)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts5a.csv)",
-            R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\pts5b.csv)", 0.75
+            base, R"(im5a.jpg)", R"(im5b.jpg)", R"(pts5a.csv)", R"(pts5b.csv)", 0.75
         }
     };
-    for (auto file_tuple : example_files)
+
+    for (auto exampleFile : exampleFiles)
     {
         Mat imgA, imgB;
         vector<vector<double>> ptsA, ptsB;
 
-        LoadImages(get<0>(file_tuple), get<1>(file_tuple), get<2>(file_tuple), get<3>(file_tuple), get<4>(file_tuple), imgA, imgB, ptsA, ptsB);
+        LoadImages(exampleFile, imgA, imgB, ptsA, ptsB);
 
         Mat ptsA_Mat = convertVectorOfVectorsToMat(ptsA);
         Mat ptsB_Mat = convertVectorOfVectorsToMat(ptsB);
@@ -173,7 +145,11 @@ int main()
         Mat mask;
         
         Mat retCV = cv::findFundamentalMat(ptsA_Mat, ptsB_Mat, mask, FM_RANSAC);
-        cout << retCV << endl;
+        std::cout << retCV << endl;
+
+        retCV = cv::separableFundamentalMatrix::findFundamentalMatFullRansac(ptsA_Mat, ptsB_Mat);
+        std::cout << retCV << endl;
+
         cv::separableFundamentalMatrix::SeparableFundamentalMatFindCommand command
             (ptsA_Mat, ptsB_Mat, imgA.size().height, imgA.size().width, 0.4, 3, -1, 150, 4, 4, 180, 3, 2, 4);
 
@@ -203,13 +179,6 @@ int main()
         cout << "Mat:" << endl << ret << endl;
 
     }
-    /*
-
-    cv::String img1_name = R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1a.jpg)";
-    cv::String img2_name = R"(C:\Users\AMIR\Downloads\Separable_Fundemental_matrix\images\im1b.jpg)";
-    auto t = LoadImages(img1_name, img2_name, 0.5);
-    ShowImage(get<0>(t));
-    ShowImage(get<1>(t));*/
     
     return 0;
 }

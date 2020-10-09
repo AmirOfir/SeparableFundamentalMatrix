@@ -3,6 +3,7 @@
 
 #include "precomp.hpp"
 #include "SFM_finder.hpp"
+#include "fm_finder.hpp"
 #include <iostream>
 using namespace std;
 using namespace cv;
@@ -410,14 +411,13 @@ PyObject* pyopencv_from(const Mat& m)
     return pyObjectFromRefcount(&(p->u->refcount));
 }
 
-static PyObject * findMat(PyObject *self, PyObject *args) {
+static PyObject * findSeparableMat(PyObject *self, PyObject *args) {
     PyObject *pyPts1, *pyPts2;
     int im_size_h_org, im_size_w_org;
 
     if (!PyArg_ParseTuple(args, "OOii", &pyPts1, &pyPts2, &im_size_h_org, &im_size_w_org))
         return NULL;
-    cout << im_size_h_org << " A " << im_size_w_org << endl;
-    
+
     Mat pts1 = fromNDArrayToMat(pyPts1);
     Mat pts2 = fromNDArrayToMat(pyPts2);
     
@@ -429,9 +429,27 @@ static PyObject * findMat(PyObject *self, PyObject *args) {
 
     return fromMatToNDArray(res);
 }
+static PyObject * findFundamentalMatRegular(PyObject *self, PyObject *args) {
+    PyObject *pyPts1, *pyPts2;
+
+    if (!PyArg_ParseTuple(args, "OO", &pyPts1, &pyPts2))
+        return NULL;
+
+    Mat pts1 = fromNDArrayToMat(pyPts1);
+    Mat pts2 = fromNDArrayToMat(pyPts2);
+    
+    // Mat findSeparableFundamentalMat(InputArray pts1, InputArray pts2, int im_size_h_org, int im_size_w_org,
+    //     float inlier_ratio = 0.4, int inlier_threshold = 3,
+    //     double hough_rescale = DEFAULT_HOUGH_RESCALE, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
+    //     int theta_res = 180, float max_distance_pts_line = 3, int top_line_retries = 2, int min_shared_points = 4);
+    Mat res = findFundamentalMatFullRansac(pts1, pts2);
+
+    return fromMatToNDArray(res);
+}
 
 static PyMethodDef SepFMMethods[] = {
-    {"findMat", findMat, METH_VARARGS, "Finds a Fundamental matrix."},
+    {"findSeparableMat", findSeparableMat, METH_VARARGS, "Finds a Separable Fundamental matrix."},
+	{"findFundamentalMatRegular", findFundamentalMatRegular, METH_VARARGS, "Finds a fundamental matrix, complete ransac."},
     {NULL, NULL, 0, NULL}
 };
 

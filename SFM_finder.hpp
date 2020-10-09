@@ -21,6 +21,8 @@ Mat findSeparableFundamentalMat(InputArray pts1, InputArray pts2, int im_size_h_
     double hough_rescale = DEFAULT_HOUGH_RESCALE, int num_matching_pts_to_use = 150, int pixel_res = 4, int min_hough_points = 4,
     int theta_res = 180, float max_distance_pts_line = 3, int top_line_retries = 2, int min_shared_points = 4);    
 
+
+
 class SFMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback
 {
     private:
@@ -76,8 +78,6 @@ public:
     Mat FindMatForInliers(Mat mat);
 
     Mat TransformResultMat(Mat mat);
-
-    
 
 };
         

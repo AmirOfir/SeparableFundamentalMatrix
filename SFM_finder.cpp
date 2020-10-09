@@ -338,18 +338,16 @@ Mat cv::separableFundamentalMatrix::findSeparableFundamentalMat(InputArray _poin
         }
     }
 
-    cout << bestInliersMat << endl;
-    PrintError(command.points1, command.points2, bestInliersMat, _inlierThreashold);
+    //cout << bestInliersMat << endl;
+    //PrintError(command.points1, command.points2, bestInliersMat, _inlierThreashold);
 
-    bestInliersMat = command.FindMatForInliers(bestInliersMat);
-    cout << bestInliersMat << endl;
-    PrintError(command.points1, command.points2, bestInliersMat, _inlierThreashold);
+    //bestInliersMat = command.FindMatForInliers(bestInliersMat);
+    //cout << bestInliersMat << endl;
+    //PrintError(command.points1, command.points2, bestInliersMat, _inlierThreashold);
 
     bestInliersMat = command.TransformResultMat(bestInliersMat);
-    cout << bestInliersMat << endl;
-    PrintError(_points1, _points2, bestInliersMat, _inlierThreashold);
+    //cout << bestInliersMat << endl;
+    //PrintError(_points1, _points2, bestInliersMat, _inlierThreashold);
     
-
-    //err = Compute
     return bestInliersMat;
 }

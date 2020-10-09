@@ -116,6 +116,7 @@
   <ItemGroup>
     <ClCompile Include="line_homography.cpp" />
     <ClCompile Include="matching_lines.cpp" />
+    <ClCompile Include="fm_finder.cpp" />
     <ClCompile Include="SFM_finder.cpp" />
     <ClCompile Include="sfm_ransac.cpp" />
   </ItemGroup>
@@ -124,6 +125,7 @@
     <ClInclude Include="line_homography.hpp" />
     <ClInclude Include="matching_lines.hpp" />
     <ClInclude Include="matching_points.hpp" />
+    <ClInclude Include="fm_finder.hpp" />
     <ClInclude Include="np_cv_imp.hpp" />
     <ClInclude Include="pointset_registrator.hpp" />
     <ClInclude Include="precomp.hpp" />
