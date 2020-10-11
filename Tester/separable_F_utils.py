@@ -6,8 +6,7 @@ from separable_F_core  import  h_coordinates,sed_core
 
 
 
-def output_results(img_num,F_ELH_R,dbg_info,F8ransac,img1c,img2c,pts1,pts2,inlier_threshold):
-    # plot_epipolarhomography_lines(dbg_info,F_ELH_R,img1c,img2c,"Image"+str(img_num)+': Matching Lines')
+def output_results(img_num,F_ELH_R, F8ransac,img1c,img2c,pts1,pts2,inlier_threshold):
 
     err_8   = symmetric_epipolar_distance(F8ransac, pts1,pts2)
     err_4_r = symmetric_epipolar_distance(F_ELH_R, pts1,pts2)

@@ -26,16 +26,23 @@ print("Number of iterations for {} inliers rate: RANSAC is {} Ours is  {}".forma
       2*int((np.log(0.01) / np.log(1 - inlier_ratio ** 5)+1)))) # Here we use at most top two lines so we take twice the number, just in case
 
 for img_num in range(1,len(imgs_name)+1):
-    print("Image pairs:" + str(img_num))
+    print("Image pair number" + str(img_num))
 
-    # Get CV time
+    # CV time
     pts1,pts2,img1c,img2c,_,_=get_matched_points(imgs_name[img_num][0], imgs_name[img_num][1], 1)
     maxIters=int(np.log(0.01) / np.log(1 - inlier_ratio ** 8))+1
+    def func_to_measure():
+         F8ransac = cv2.findFundamentalMat(pts1, pts2, cv2.FM_RANSAC, 3, 0.99, maxIters)
+    duration = timeit.repeat(func_to_measure, repeat=repeat_count, number=1)
+    duration  = round(np.mean(duration[1:]),5)
+    print('opencv time:', duration)
+
+    # Regular time
     def func_to_measure():
          F8ransac = findFundamentalMatRegular(pts1, pts2)#, cv2.FM_RANSAC, 3, 0.99, maxIters)
     duration = timeit.repeat(func_to_measure, repeat=repeat_count, number=1)
     duration  = round(np.mean(duration[1:]),5)
-    print('regular:', duration)
+    print('full ransac:', duration)
 
     pts1,pts2,img1c,img2c,_,_=get_matched_points(*list(imgs_name[img_num][0:3]))
     def func_to_measure():

@@ -3,6 +3,7 @@
 #include <iostream>
 #include "sfm_ransac.hpp"
 
+using namespace std;
 using namespace cv;
 
 template <typename _Tp>
@@ -16,12 +17,12 @@ bool haveCollinearPoints( const Mat& m, int count )
     // also checks that points are not too close to each other
     for( j = 0; j < i; j++ )
     {
-        _Tp dx1 = ptr[j].x - ptr[i].x;
-        _Tp dy1 = ptr[j].y - ptr[i].y;
+        double dx1 = ptr[j].x - ptr[i].x;
+        double dy1 = ptr[j].y - ptr[i].y;
         for( k = 0; k < j; k++ )
         {
-            _Tp dx2 = ptr[k].x - ptr[i].x;
-            _Tp dy2 = ptr[k].y - ptr[i].y;
+            double dx2 = ptr[k].x - ptr[i].x;
+            double dy2 = ptr[k].y - ptr[i].y;
             if( fabs(dx2*dy1 - dy2*dx1) <= FLT_EPSILON*(fabs(dx1) + fabs(dy1) + fabs(dx2) + fabs(dy2)))
                 return true;
         }
@@ -32,7 +33,7 @@ bool haveCollinearPoints( const Mat& m, int count )
 // ------------------------------------------------------
 //                   OPENCV findFundamentalMat
 // Imported from fundam.cpp
-/*static int run7Point( const Mat& _m1, const Mat& _m2, Mat& _fmatrix )
+static int run7Point( const Mat& _m1, const Mat& _m2, Mat& _fmatrix )
 {
     double a[7*9], w[7], u[9*9], v[9*9], c[4], r[3] = {0};
     double* f1, *f2;
@@ -177,7 +178,8 @@ bool haveCollinearPoints( const Mat& m, int count )
 
         // de-normalize
         Mat F(3, 3, CV_64F, fmatrix);
-        F = T2.t() * F * T1;
+        F = Mat(T2.t()) * F;
+        F = F * Mat(T1);
 
         // make F(3,3) = 1
         if(fabs(F.at<double>(8)) > FLT_EPSILON )
@@ -185,7 +187,7 @@ bool haveCollinearPoints( const Mat& m, int count )
     }
 
     return n;
-}*/
+}
 
 static int run8Point( const Mat& _m1, const Mat& _m2, Mat& _fmatrix )
 {
@@ -300,7 +302,7 @@ public:
         Mat m1 = _m1.getMat(), m2 = _m2.getMat();
         int count = m1.checkVector(2);
         Mat F(count == 7 ? 9 : 3, 3, CV_64F, f);
-        int n = count == 7 ? 0 /*run7Point(m1, m2, F)*/ : run8Point(m1, m2, F);
+        int n = count == 7 ? run7Point(m1, m2, F) : run8Point(m1, m2, F);
 
         if( n == 0 )
             _model.release();
@@ -346,7 +348,7 @@ public:
 
 cv::Mat cv::separableFundamentalMatrix::findFundamentalMatFullRansac(InputArray _points1, InputArray _points2, float inlierRatio)
 {
-    int maxIterations = int((log(0.01) / log(1 - pow(inlierRatio, 5)))) + 1;
+    int maxIterations = int((log(0.01) / log(1 - pow(inlierRatio, 8)))) + 1;
     int method = FM_RANSAC;
     auto _mask = noArray();
     double ransacReprojThreshold = 3;

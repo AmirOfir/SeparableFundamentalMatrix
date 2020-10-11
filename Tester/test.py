@@ -31,8 +31,9 @@ for img_num in range(1,len(imgs_name)+1):
     print("Image pairs:" + str(img_num))
     pts1,pts2,img1c,img2c,_,_=get_matched_points(*list(imgs_name[img_num][0:3]))
 
-    F8ransac, inliers_ransac = cv2.findFundamentalMat(pts1, pts2, cv2.FM_RANSAC)
-    #  F_ELH[0] is RANSAC, F_ELH[1] is LMEDS
-    F_ELH = sepfm.findMat(pts1, pts2, np.shape(img1c)[0],np.shape(img1c)[1])
-    print(F_ELH)
-    output_results(img_num, F_ELH, None, F8ransac, img1c, img2c, pts1, pts2, inlier_threshold)
+    fullRansacMat = sepfm.findFundamentalMatRegular(pts1, pts2)
+    print('full ransac mat:', fullRansacMat)
+
+    seperableMat = sepfm.findSeparableMat(pts1, pts2, np.shape(img1c)[0], np.shape(img1c)[1])
+    print('seperable mat:', seperableMat)
+    output_results(img_num, seperableMat, fullRansacMat, img1c, img2c, pts1, pts2, inlier_threshold)
