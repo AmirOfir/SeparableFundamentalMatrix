@@ -38,6 +38,7 @@ def symmetric_epipolar_distance(F,pts1,pts2):
 
 import os 
 def get_matched_points(img1_name,img2_name,scale_factor):
+    print("Matching points {},{}".format(img1_name, img2_name))
     img1c = cv2.imread(img1_name)  # queryImage
     img2c = cv2.imread(img2_name)  # trainImage
     if (img1c is None):
@@ -73,8 +74,6 @@ def get_matched_points(img1_name,img2_name,scale_factor):
             matches.append([m])
     pts1 = np.float32([pts1all[m[0].queryIdx] for m in matches])
     pts2 = np.float32([pts2all[m[0].trainIdx] for m in matches])
-
-    print("Matching points {},{}".format(img1_name, img2_name))
 
     return pts1,pts2,img1c,img2c,img1,img2
 

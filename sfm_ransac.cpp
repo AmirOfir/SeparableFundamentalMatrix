@@ -62,8 +62,7 @@ public:
 
     bool getSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, RNG& rng, int maxAttempts=1000 ) const
     {
-        cv::AutoBuffer<int> _idx(modelPoints);
-        int* idx = _idx.data();
+        vector<int> idx(modelPoints, 0);
 
         const int d1 = m1.channels() > 1 ? m1.channels() : m1.cols;
         const int d2 = m2.channels() > 1 ? m2.channels() : m2.cols;
@@ -96,7 +95,7 @@ public:
                 int idx_i;
 
                 for ( idx_i = rng.uniform(0, count);
-                    std::find(idx, idx + i, idx_i) != idx + i;
+                    std::find(idx.begin(), idx.end(), idx_i) != idx.end();
                     idx_i = rng.uniform(0, count) )
                 {}
 

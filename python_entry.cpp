@@ -147,12 +147,7 @@ public:
 		return allocate(o, dims0, sizes, type, step);
 	}
 
-	bool allocate(UMatData* u, int accessFlags,
-			UMatUsageFlags usageFlags) const {
-		return stdAllocator->allocate(u, (AccessFlag)accessFlags, usageFlags);
-	}
-
-    bool allocate(cv::UMatData *u,cv::AccessFlag accessFlags,cv::UMatUsageFlags usageFlags) const
+    bool allocate(cv::UMatData *u, AccessFlag accessFlags,cv::UMatUsageFlags usageFlags) const
     {
         return stdAllocator->allocate(u, accessFlags, usageFlags);
     }
