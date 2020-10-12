@@ -21,7 +21,12 @@ Use standard installation using cmake.
 
         python setup.py install
         
-        -- Importing 
+3. To build and run on python (tested on ubuntu Ubuntu 20.04.1 LTS, anaconda, python 3.7.7, opencv 3.7): 
+
+        python setup_linux.py install
+                
+4. Importing to the python script
+
         import sepfm
 4. For finding a fundamental matrix:
 
@@ -40,8 +45,11 @@ Use standard installation using cmake.
         python tester\times.py
 
 ## Contribution and further requirements
-For exposure of additional arguments to python, bug reports, and centra please do not hesitate to reaching us.
 
-## Footnotes
-Credits for the full RANSAC are available from opencv.
+Please, do not hesitate reaching us for bug reports, features and exposure of additional arguments to python.
+For contribution please contact Gil Ben-Arzi. Please credit and cite.
+
+## Credits
+* https://github.com/Algomorph/pyboostcvconverter
+* https://github.com/OpenCV/
 
